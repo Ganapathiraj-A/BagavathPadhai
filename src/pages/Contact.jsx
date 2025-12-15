@@ -13,7 +13,8 @@ const ContactItem = ({ icon: Icon, title, content, href }) => (
         borderRadius: '0.75rem',
         backgroundColor: 'var(--color-surface)',
         transition: 'background-color 0.2s',
-        textAlign: 'center'
+        textAlign: 'center',
+        height: '100%' // Ensure equal height in grid
     }}
         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFF5E6'}
         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
@@ -59,7 +60,7 @@ const Contact = () => {
                 >
                     <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#111827', marginBottom: '2rem', textAlign: 'center' }}>Contact Us</h1>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <ContactItem
                             icon={Mail}
                             title="Email"
@@ -82,14 +83,21 @@ const Contact = () => {
                         <ContactItem
                             icon={Globe}
                             title="Website"
-                            content="www.sribagavath.org"
-                            href="https://www.sribagavath.org"
+                            content="sribagavath.com"
+                            href="https://sribagavath.com/"
                         />
 
                         <ContactItem
                             icon={MapPin}
                             title="Address"
                             content="Sri Bagavath Mission, 31, Ramalingasamy Street, Ammapet, Salem - 636 003."
+                        />
+
+                        <ContactItem
+                            icon={MapPin}
+                            title="Location Map"
+                            content="View on Google Maps"
+                            href="https://maps.app.goo.gl/RxVQ3nqtvuk84UWs8"
                         />
                     </div>
                 </motion.div>

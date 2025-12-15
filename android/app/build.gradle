@@ -61,11 +61,11 @@ try {
 
 
 task syncApkToDrive(type: Exec) {
-    commandLine 'bash', '-c', '''
-    rclone sync \
-    "/home/ganapathiraj/Code/AndroidDevelopment/Antigravity/android/app/build/outputs/apk/debug" \
+    commandLine 'bash', '-c', """
+    rclone sync \\
+    "${project.rootDir}/app/build/outputs/apk/debug" \\
     "gdrive:Code/Build/BagavathPadhai"
-    '''
+    """
 }
 
 tasks.whenTaskAdded { task ->

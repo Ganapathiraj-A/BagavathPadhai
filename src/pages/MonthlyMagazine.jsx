@@ -102,9 +102,57 @@ const MonthlyMagazine = () => {
         navigate(-1);
     };
 
-    // Separate files and folders
-    const folders = driveFiles ? driveFiles.filter(item => item.mimeType === 'application/vnd.google-apps.folder') : [];
-    const files = driveFiles ? driveFiles.filter(item => item.mimeType !== 'application/vnd.google-apps.folder') : [];
+    // Sorting Logic
+    const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+    const MONTHS_ABBR = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    // Tamil transliterations of Gregorian months
+    const MONTHS_TAMIL = ['ஜனவரி', 'பிப்ரவரி', 'மார்ச்', 'ஏப்ரல்', 'மே', 'ஜூன்', 'ஜூலை', 'ஆகஸ்ட்', 'செப்டம்பர்', 'அக்டோபர்', 'நவம்பர்', 'டிசம்பர்'];
+
+    const getMonthIndex = (name) => {
+        if (!name) return -1;
+        const lower = name.toLowerCase();
+
+        // Check full names first
+        let idx = MONTHS.findIndex(m => lower.includes(m));
+        if (idx !== -1) return idx;
+
+        // Check Tamil (Case insensitive not really needed but safe to check raw)
+        idx = MONTHS_TAMIL.findIndex(m => name.includes(m));
+        if (idx !== -1) return idx;
+
+        // Check abbreviations (word boundary check is not easily done with simple includes, but months are usually distinct)
+        // To avoid "Decade" matching "Dec", simple includes is risky but standard for this user context.
+        idx = MONTHS_ABBR.findIndex(m => lower.includes(m));
+        return idx;
+    };
+
+    const sortItems = (a, b) => {
+        const idxA = getMonthIndex(a.name);
+        const idxB = getMonthIndex(b.name);
+
+        if (idxA !== -1 && idxB !== -1) {
+            // Both have valid months, sort by month index
+            if (idxA !== idxB) return idxA - idxB;
+            // Same month? Sort by name (e.g. handle year if present or dupes)
+            return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+        }
+
+        // Prioritize items WITH months over items WITHOUT
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+
+        // Fallback to natural sort
+        return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+    };
+
+    // Separate files and folders and apply sort
+    const folders = driveFiles
+        ? driveFiles.filter(item => item.mimeType === 'application/vnd.google-apps.folder').sort(sortItems)
+        : [];
+
+    const files = driveFiles
+        ? driveFiles.filter(item => item.mimeType !== 'application/vnd.google-apps.folder').sort(sortItems)
+        : [];
 
     return (
         <div style={{

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { cleanupOldSchedules } from '../utils/cleanup';
 import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2, Calendar as CalendarIcon, MapPin } from 'lucide-react';
 import BackButton from '../components/BackButton';
@@ -10,7 +11,7 @@ const ScheduleManagement = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingSchedule, setEditingSchedule] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' or 'history'
+    // Removed activeTab state as we only show upcoming
 
     const [formData, setFormData] = useState({
         fromDate: '',
@@ -18,41 +19,40 @@ const ScheduleManagement = () => {
         place: ''
     });
 
-    // Load schedules from Firebase when tab changes
+    // Load schedules and run cleanup on mount
     useEffect(() => {
-        loadSchedules();
-    }, [activeTab]);
+        const init = async () => {
+            // Run cleanup first to ensure we don't load old data
+            await cleanupOldSchedules();
+            loadSchedules();
+        };
+        init();
+    }, []);
 
     const loadSchedules = async () => {
         setLoading(true);
         try {
             const schedulesRef = collection(db, 'schedules');
-            const today = new Date().toISOString().split('T')[0];
-            let q;
-
-            if (activeTab === 'upcoming') {
-                // Upcoming: fromDate >= today, ascending
-                q = query(
-                    schedulesRef,
-                    where('fromDate', '>=', today),
-                    orderBy('fromDate', 'asc')
-                );
-            } else {
-                // History: fromDate < today, descending (newest past first), limit 10
-                q = query(
-                    schedulesRef,
-                    where('fromDate', '<', today),
-                    orderBy('fromDate', 'desc'),
-                    limit(10)
-                );
-            }
+            // Since cleanupOldSchedules() deletes everything where toDate < today,
+            // we can simply fetch all remaining schedules sorted by fromDate.
+            // This will include ongoing (started in past, ends in future) and strictly future events.
+            const q = query(
+                schedulesRef,
+                orderBy('fromDate', 'asc')
+            );
 
             const querySnapshot = await getDocs(q);
             const schedulesList = querySnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
-            setSchedules(schedulesList);
+
+            // Client-side strict filter to ensure no history is shown
+            // (in case cleanup hasn't finished or failed)
+            const today = new Date().toISOString().split('T')[0];
+            const filteredSchedules = schedulesList.filter(s => s.toDate >= today);
+
+            setSchedules(filteredSchedules);
         } catch (error) {
             console.error('Error loading schedules:', error);
             alert('Error loading schedules. Please check Firebase configuration.');
@@ -198,19 +198,25 @@ const ScheduleManagement = () => {
                     >
                         <div>
                             <span style={{ fontWeight: 500, color: '#6b7280', display: 'block', fontSize: '0.875rem' }}>From</span>
-                            <span style={{ color: '#111827' }}>
-                                {new Date(schedule.fromDate).toLocaleDateString(undefined, {
-                                    weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
-                                })}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem' }}>
+                                <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#000' }}>
+                                    {new Date(schedule.fromDate).toLocaleDateString('en-US', { weekday: 'short' })}, {new Date(schedule.fromDate).getDate()}
+                                </span>
+                                <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>
+                                    {new Date(schedule.fromDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                                </span>
+                            </div>
                         </div>
                         <div>
                             <span style={{ fontWeight: 500, color: '#6b7280', display: 'block', fontSize: '0.875rem' }}>To</span>
-                            <span style={{ color: '#111827' }}>
-                                {new Date(schedule.toDate).toLocaleDateString(undefined, {
-                                    weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
-                                })}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem' }}>
+                                <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#000' }}>
+                                    {new Date(schedule.toDate).toLocaleDateString('en-US', { weekday: 'short' })}, {new Date(schedule.toDate).getDate()}
+                                </span>
+                                <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>
+                                    {new Date(schedule.toDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -315,45 +321,9 @@ const ScheduleManagement = () => {
                             Schedule Management
                         </h1>
 
-                        {/* Tabs */}
-                        {!showForm && (
-                            <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid #e5e7eb' }}>
-                                <button
-                                    onClick={() => setActiveTab('upcoming')}
-                                    style={{
-                                        padding: '0.75rem 1rem',
-                                        borderBottom: activeTab === 'upcoming' ? '2px solid var(--color-primary)' : 'none',
-                                        color: activeTab === 'upcoming' ? 'var(--color-primary)' : '#6b7280',
-                                        fontWeight: activeTab === 'upcoming' ? 600 : 500,
-                                        background: 'none',
-                                        borderTop: 'none',
-                                        borderLeft: 'none',
-                                        borderRight: 'none',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    Upcoming
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('history')}
-                                    style={{
-                                        padding: '0.75rem 1rem',
-                                        borderBottom: activeTab === 'history' ? '2px solid var(--color-primary)' : 'none',
-                                        color: activeTab === 'history' ? 'var(--color-primary)' : '#6b7280',
-                                        fontWeight: activeTab === 'history' ? 600 : 500,
-                                        background: 'none',
-                                        borderTop: 'none',
-                                        borderLeft: 'none',
-                                        borderRight: 'none',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    History
-                                </button>
-                            </div>
-                        )}
+                        {/* Tabs Removed */}
 
-                        {!showForm && activeTab === 'upcoming' && (
+                        {!showForm && (
                             <button
                                 onClick={() => setShowForm(true)}
                                 style={{

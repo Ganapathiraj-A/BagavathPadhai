@@ -1,19 +1,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Globe } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe, Home } from 'lucide-react';
 import BackButton from '../components/BackButton';
 
 const ContactItem = ({ icon: Icon, content, href }) => (
     <div style={{
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'row',
         alignItems: 'center',
-        gap: '0.5rem',
+        gap: '1rem',
         padding: '1.5rem',
         borderRadius: '0.75rem',
         backgroundColor: 'var(--color-surface)',
         transition: 'background-color 0.2s',
-        textAlign: 'center',
+        textAlign: 'left',
         height: '100%' // Ensure equal height in grid
     }}
         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFF5E6'}
@@ -31,7 +31,7 @@ const ContactItem = ({ icon: Icon, content, href }) => (
         }}>
             <Icon size={24} />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem', width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.25rem', flex: 1 }}>
             {href ? (
                 <a href={href} style={{ color: '#4b5563', transition: 'color 0.2s', fontSize: '1.1rem', fontWeight: 500 }}
                     onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
@@ -84,13 +84,13 @@ const Contact = () => {
 
                         <ContactItem
                             icon={MapPin}
-                            content="Sri Bagavath Mission, 31, Ramalingasamy Street, Ammapet, Salem - 636 003."
+                            content="View on Google Maps"
+                            href="https://maps.app.goo.gl/RxVQ3nqtvuk84UWs8"
                         />
 
                         <ContactItem
-                            icon={MapPin}
-                            content="View on Google Maps"
-                            href="https://maps.app.goo.gl/RxVQ3nqtvuk84UWs8"
+                            icon={Home}
+                            content="Sri Bagavath Mission, 31, Ramalingasamy Street, Ammapet, Salem - 636 003."
                         />
                     </div>
                 </motion.div>

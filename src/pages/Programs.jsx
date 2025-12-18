@@ -235,11 +235,11 @@ ${program.programDescription ? `📝 *Description:*\n${program.programDescriptio
                                 boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
                             }}
                         >
-                            {/* Image First */}
-                            {viewingProgram.programBanner && (
+                            {/* Image First - Only if no text details shown */}
+                            {viewingProgram.programBanner && !showTextDetails && (
                                 <div
                                     style={{ marginBottom: '1.5rem', cursor: 'pointer' }}
-                                    onClick={() => setShowTextDetails(!showTextDetails)}
+                                    onClick={() => setShowTextDetails(true)}
                                 >
                                     <img
                                         src={viewingProgram.programBanner}
@@ -300,9 +300,17 @@ ${program.programDescription ? `📝 *Description:*\n${program.programDescriptio
 
                             </div>
 
-                            {/* Details Section - Logic: Show if NO banner OR if toggle is active */}
+                            {/* Details Section - Logic: Show if NO banner OR if toggle is active (REPLACES banner) */}
                             {(!viewingProgram.programBanner || showTextDetails) && (
-                                <div style={{ display: 'grid', gap: '1.5rem', color: '#374151' }}>
+                                <div
+                                    style={{
+                                        display: 'grid',
+                                        gap: '1.5rem',
+                                        color: '#374151',
+                                        cursor: viewingProgram.programBanner ? 'pointer' : 'default'
+                                    }}
+                                    onClick={() => viewingProgram.programBanner && setShowTextDetails(false)}
+                                >
                                     <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#111827', margin: 0 }}>
                                         {viewingProgram.programName}
                                         {viewingProgram.programDate && (

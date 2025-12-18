@@ -35,7 +35,7 @@ const AdminReview = () => {
                 const { collection, getDocs } = await import('firebase/firestore');
                 const { db } = await import('../firebase');
                 const snapshot = await getDocs(collection(db, 'programs'));
-                const progs = snapshot.docs.map(d => d.data());
+                const progs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 setAllPrograms(progs);
             } catch (e) {
                 console.error("Failed to fetch programs", e);
@@ -155,6 +155,7 @@ const AdminReview = () => {
 
     // State for Image Modal
     const [viewingImage, setViewingImage] = useState(null);
+    const [viewingReg, setViewingReg] = useState(null);
 
     const handleViewImage = async (id) => {
         try {
@@ -176,6 +177,97 @@ const AdminReview = () => {
                     <div className="modal-content" onClick={e => e.stopPropagation()} style={{ flexDirection: 'column', alignItems: 'center', gap: '10px', background: 'white', padding: '10px' }}>
                         <img src={`data:image/jpeg;base64,${viewingImage}`} alt="Receipt" className="modal-image" style={{ maxHeight: '80vh' }} />
                         <button className="btn-primary" onClick={() => setViewingImage(null)} style={{ width: '100%', background: '#2563eb' }}>
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Registration Details Modal */}
+            {viewingReg && (
+                <div className="modal-overlay" onClick={() => setViewingReg(null)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()} style={{
+                        flexDirection: 'column',
+                        background: 'white',
+                        padding: '20px',
+                        maxWidth: '90%',
+                        maxHeight: '85vh',
+                        overflowY: 'auto',
+                        borderRadius: '12px'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                            <h2 style={{ margin: 0, fontSize: '18px' }}>Registration Info</h2>
+                            <button onClick={() => setViewingReg(null)} style={{ border: 'none', background: 'none', padding: '5px' }}>
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div>
+                                <h3 style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#666' }}>Program</h3>
+                                <div style={{ fontWeight: 600 }}>
+                                    {viewingReg.itemName}
+                                    {(() => {
+                                        const details = getProgramDetails(viewingReg);
+                                        if (details.date) {
+                                            return (
+                                                <span style={{ fontSize: '14px', fontWeight: 'normal', color: '#666', marginLeft: '6px' }}>
+                                                    ({new Date(details.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                    {details.city ? ` - ${details.city}` : ''})
+                                                </span>
+                                            );
+                                        }
+                                        return null;
+                                    })()}
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '20px' }}>
+                                <div>
+                                    <h3 style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#666' }}>Amount Paid</h3>
+                                    <div style={{ fontWeight: 600, color: '#006400' }}>₹{viewingReg.amount}</div>
+                                </div>
+                                <div>
+                                    <h3 style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#666' }}>Coming From</h3>
+                                    <div style={{ fontWeight: 600 }}>{viewingReg.place || 'Not Specified'}</div>
+                                </div>
+                            </div>
+
+                            <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '8px 0' }} />
+
+                            <h3 style={{ margin: 0, fontSize: '16px', color: '#111' }}>Participants ({viewingReg.participants?.length || 0})</h3>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                {viewingReg.participants?.map((p, i) => (
+                                    <div key={i} style={{
+                                        background: '#f9fafb',
+                                        padding: '10px',
+                                        borderRadius: '8px',
+                                        border: '1px solid #f3f4f6'
+                                    }}>
+                                        <div style={{ fontWeight: 600, fontSize: '15px', color: '#111' }}>{i + 1}. {p.name}</div>
+                                        <div style={{ fontSize: '13px', color: '#4b5563', marginTop: '4px' }}>
+                                            {p.gender}, {p.age} yrs • {p.accommodation}
+                                        </div>
+                                        <div style={{ fontSize: '13px', color: '#4b5563' }}>Mobile: {p.mobile}</div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '8px 0' }} />
+
+                            <div>
+                                <h3 style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#666' }}>Primary Contact</h3>
+                                <div style={{ fontWeight: 600 }}>{viewingReg.primaryApplicant?.name}</div>
+                                <div style={{ fontSize: '14px' }}>{viewingReg.primaryApplicant?.mobile}</div>
+                            </div>
+
+                            <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '10px' }}>
+                                Transaction ID: {viewingReg.id}
+                            </div>
+                        </div>
+
+                        <button className="btn-primary" onClick={() => setViewingReg(null)} style={{ marginTop: '20px', width: '100%', background: '#2563eb' }}>
                             Close
                         </button>
                     </div>
@@ -350,9 +442,12 @@ const AdminReview = () => {
                                 </div>
                             )}
 
-                            {tx.hasImage && (
-                                <button className="btn-text" onClick={() => handleViewImage(tx.id)} style={{ marginTop: '8px', padding: 0, textAlign: 'left' }}>View Receipt</button>
-                            )}
+                            <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginTop: '8px' }}>
+                                {tx.hasImage && (
+                                    <button className="btn-text" onClick={() => handleViewImage(tx.id)} style={{ padding: 0 }}>View Receipt</button>
+                                )}
+                                <button className="btn-text" onClick={() => setViewingReg(tx)} style={{ padding: 0 }}>View Registration Info</button>
+                            </div>
 
                             {/* Workflows */}
                             <div className="action-row">

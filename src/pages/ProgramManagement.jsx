@@ -8,6 +8,7 @@ import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, o
 // Removed storage imports as we are using Base64 in Firestore
 // Removed storage imports as we are using Base664 in Firestore
 import { tamilnaduCities } from '../data/tamilnaduCities';
+import { TransactionService } from '../services/TransactionService';
 
 // Helper to compress image to Base64
 // Helper to compress image to Base64
@@ -391,15 +392,21 @@ const ProgramManagement = () => {
 
 
     const handleDelete = async (programId) => {
-        if (window.confirm('Are you sure you want to delete this program?')) {
-            try {
+        try {
+            const hasRegs = await TransactionService.hasRegistrationsForProgram(programId);
+            if (hasRegs) {
+                alert('Delete all registration pointing to this program before deleting this program');
+                return;
+            }
+
+            if (window.confirm('Are you sure you want to delete this program?')) {
                 await deleteDoc(doc(db, 'programs', programId));
                 alert('Program deleted successfully!');
                 loadPrograms();
-            } catch (error) {
-                console.error('Error deleting program:', error);
-                alert('Error deleting program: ' + error.message);
             }
+        } catch (error) {
+            console.error('Error deleting program:', error);
+            alert('Error deleting program: ' + error.message);
         }
     };
 

@@ -1,5 +1,5 @@
 import { db } from '../firebase';
-import { collection, doc, setDoc, updateDoc, deleteDoc, getDoc, onSnapshot, query, orderBy, where, Timestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, onSnapshot, query, orderBy, where, limit, Timestamp } from 'firebase/firestore';
 
 import { auth } from '../firebase';
 
@@ -136,5 +136,17 @@ export const TransactionService = {
             await batch.commit();
         }
         return count;
+    },
+
+    // Check if registrations exist for a program
+    hasRegistrationsForProgram: async (programId) => {
+        try {
+            const q = query(collection(db, "transactions"), where("programId", "==", programId), limit(1));
+            const snap = await getDocs(q);
+            return !snap.empty;
+        } catch (e) {
+            console.error("Error checking registrations", e);
+            return false;
+        }
     }
 };

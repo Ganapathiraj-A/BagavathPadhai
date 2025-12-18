@@ -451,13 +451,7 @@ ${program.programDescription ? `📝 *Description:*\n${program.programDescriptio
                                                 borderRadius: '1rem',
                                                 padding: '1.5rem',
                                                 boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-                                                border: '1px solid #f3f4f6',
-                                                cursor: program.registrationStatus === 'Open' ? 'pointer' : 'default'
-                                            }}
-                                            onClick={() => {
-                                                if (program.registrationStatus === 'Open') {
-                                                    setSearchParams({ id: program.id });
-                                                }
+                                                border: '1px solid #f3f4f6'
                                             }}
                                         >
                                             <div style={{ marginBottom: '1rem' }}>

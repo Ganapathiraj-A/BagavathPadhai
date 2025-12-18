@@ -161,7 +161,9 @@ const PaymentFlow = () => {
                     e.currentTarget.style.display = 'none';
                 }} />
             </div>
-            <p className="hint-text">(Tap the QR code to save it and proceed)</p>
+            <p className="hint-text" style={{ textAlign: 'center' }}>
+                Tap the QR code to save UPI ID to clipboard and proceed
+            </p>
             <button className="btn-secondary full-width" onClick={() => navigate('/event-registration', {
                 replace: true,
                 state: {

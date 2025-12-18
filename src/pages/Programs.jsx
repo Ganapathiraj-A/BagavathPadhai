@@ -16,6 +16,7 @@ const Programs = () => {
     const [specificProgram, setSpecificProgram] = useState(null); // Separate state for linked program
     const [loading, setLoading] = useState(true);
     const [specificLoading, setSpecificLoading] = useState(false);
+    const [showTextDetails, setShowTextDetails] = useState(false);
 
 
     const viewingProgramId = searchParams.get('id');
@@ -213,7 +214,10 @@ ${program.programDescription ? `📝 *Description:*\n${program.programDescriptio
         <div style={{
             minHeight: '100vh',
             backgroundColor: 'var(--color-surface)',
-            padding: '1.5rem'
+            padding: '1.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center'
         }}>
             <div style={{ maxWidth: '42rem', margin: '0 auto' }}>
 
@@ -233,7 +237,10 @@ ${program.programDescription ? `📝 *Description:*\n${program.programDescriptio
                         >
                             {/* Image First */}
                             {viewingProgram.programBanner && (
-                                <div style={{ marginBottom: '1.5rem' }}>
+                                <div
+                                    style={{ marginBottom: '1.5rem', cursor: 'pointer' }}
+                                    onClick={() => setShowTextDetails(!showTextDetails)}
+                                >
                                     <img
                                         src={viewingProgram.programBanner}
                                         alt="Program Banner"
@@ -275,9 +282,9 @@ ${program.programDescription ? `📝 *Description:*\n${program.programDescriptio
                                             display: 'flex',
                                             alignItems: 'center',
                                             gap: '0.5rem',
-                                            backgroundColor: 'var(--color-primary)',
-                                            color: 'white',
-                                            border: 'none',
+                                            color: 'var(--color-primary)',
+                                            background: 'none',
+                                            border: '1px solid var(--color-primary)',
                                             padding: '0.5rem 1rem',
                                             borderRadius: '0.375rem',
                                             fontSize: '0.875rem',
@@ -293,8 +300,8 @@ ${program.programDescription ? `📝 *Description:*\n${program.programDescriptio
 
                             </div>
 
-                            {/* Details Section - Logic: Show ONLY if no banner */}
-                            {!viewingProgram.programBanner && (
+                            {/* Details Section - Logic: Show if NO banner OR if toggle is active */}
+                            {(!viewingProgram.programBanner || showTextDetails) && (
                                 <div style={{ display: 'grid', gap: '1.5rem', color: '#374151' }}>
                                     <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#111827', margin: 0 }}>
                                         {viewingProgram.programName}
@@ -533,7 +540,24 @@ ${program.programDescription ? `📝 *Description:*\n${program.programDescriptio
                                                 </div>
 
                                                 {program.registrationStatus === 'Open' && (
-                                                    <div style={{ padding: '0.5rem' }}></div>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSearchParams({ id: program.id });
+                                                        }}
+                                                        style={{
+                                                            padding: '0.5rem 1rem',
+                                                            backgroundColor: 'white',
+                                                            color: '#374151',
+                                                            border: '1px solid #d1d5db',
+                                                            borderRadius: '0.375rem',
+                                                            cursor: 'pointer',
+                                                            fontSize: '0.875rem',
+                                                            fontWeight: 500
+                                                        }}
+                                                    >
+                                                        Details
+                                                    </button>
                                                 )}
                                             </div>
                                         </motion.div>

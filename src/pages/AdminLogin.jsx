@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { useAdminAuth } from '../context/AdminAuthContext';
@@ -20,6 +20,21 @@ const AdminLogin = () => {
     const from = location.state?.from?.pathname || '/admin-review';
 
     useEffect(() => {
+        // Handle Google Redirect Result
+        const checkRedirect = async () => {
+            try {
+                const result = await getRedirectResult(auth);
+                if (result) {
+                    // Auth state will be updated by AdminAuthContext
+                    console.log("Logged in with Google:", result.user.email);
+                }
+            } catch (err) {
+                console.error("Redirect error", err);
+                setError("Google login failed: " + err.message);
+            }
+        };
+        checkRedirect();
+
         // If already admin, redirect away
         if (!authLoading && isAdmin) {
             navigate(from, { replace: true });
@@ -43,7 +58,7 @@ const AdminLogin = () => {
         setError('');
         const provider = new GoogleAuthProvider();
         try {
-            await signInWithPopup(auth, provider);
+            await signInWithRedirect(auth, provider);
         } catch (err) {
             setError('Google login failed: ' + err.message);
             setLoading(false);

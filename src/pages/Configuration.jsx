@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Shield, Code, LogOut } from 'lucide-react';
+import { Calendar, Shield, Code, LogOut, Users } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 
@@ -90,6 +90,7 @@ const Configuration = () => {
                         <ConfigButton title="Program Types" icon={Code} path="/configuration/program-types" delay={0.15} />
                         <ConfigButton title="Ayya's Schedule" icon={Calendar} path="/schedule/manage" delay={0.2} />
                         <ConfigButton title="Registration" icon={Shield} path="/admin-review" delay={0.2} />
+                        <ConfigButton title="Manage Admins" icon={Users} path="/manage-users" delay={0.22} />
 
                         <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #f3f4f6' }}>
                             <ConfigButton

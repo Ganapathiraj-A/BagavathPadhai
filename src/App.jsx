@@ -16,6 +16,7 @@ import Contact from './pages/Contact';
 import Configuration from './pages/Configuration';
 import ProgramManagement from './pages/ProgramManagement';
 import ProgramTypesManagement from './pages/ProgramTypesManagement';
+import ManageUsers from './pages/ManageUsers';
 import ProgramConversations from './pages/ProgramConversations';
 import AyyasSchedule from './pages/AyyasSchedule';
 import ScheduleManagement from './pages/ScheduleManagement';
@@ -81,6 +82,7 @@ function AnimatedRoutes() {
         <Route path="/configuration" element={<ProtectedRoute><Configuration /></ProtectedRoute>} />
         <Route path="/program" element={<ProtectedRoute><ProgramManagement /></ProtectedRoute>} />
         <Route path="/configuration/program-types" element={<ProtectedRoute><ProgramTypesManagement /></ProtectedRoute>} />
+        <Route path="/manage-users" element={<ProtectedRoute><ManageUsers /></ProtectedRoute>} />
         <Route path="/conversations/programs" element={<ProtectedRoute><ProgramConversations /></ProtectedRoute>} />
         <Route path="/schedule/manage" element={<ProtectedRoute><ScheduleManagement /></ProtectedRoute>} />
         <Route path="/admin-review" element={<ProtectedRoute><AdminReview /></ProtectedRoute>} />

@@ -8,6 +8,7 @@ const AdminAuthContext = createContext();
 export const AdminAuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [isPending, setIsPending] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -15,16 +16,25 @@ export const AdminAuthProvider = ({ children }) => {
             if (currentUser) {
                 setUser(currentUser);
                 if (!currentUser.isAnonymous) {
-                    console.log("Logged in UID:", currentUser.uid); // Helper for the user
+                    console.log("Logged in UID:", currentUser.uid);
                     try {
                         const adminDoc = await getDoc(doc(db, 'admins', currentUser.uid));
-                        setIsAdmin(adminDoc.exists());
+                        if (adminDoc.exists()) {
+                            setIsAdmin(true);
+                            setIsPending(false);
+                        } else {
+                            setIsAdmin(false);
+                            // Check if a request is pending
+                            const reqDoc = await getDoc(doc(db, 'admin_requests', currentUser.uid));
+                            setIsPending(reqDoc.exists());
+                        }
                     } catch (error) {
-                        console.error("Error checking admin status:", error);
+                        console.error("Error checking status:", error);
                         setIsAdmin(false);
                     }
                 } else {
                     setIsAdmin(false);
+                    setIsPending(false);
                 }
                 setLoading(false);
             } else {
@@ -39,7 +49,7 @@ export const AdminAuthProvider = ({ children }) => {
     }, []);
 
     return (
-        <AdminAuthContext.Provider value={{ user, isAdmin, loading }}>
+        <AdminAuthContext.Provider value={{ user, isAdmin, isPending, loading, setIsPending }}>
             {children}
         </AdminAuthContext.Provider>
     );

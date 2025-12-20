@@ -1,16 +1,29 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
+import { useAdminAuth } from '../context/AdminAuthContext';
 import { Lock, Mail } from 'lucide-react';
-import '../components/RegistrationStyles.css'; // Reuse styles
+import '../components/RegistrationStyles.css';
 
 const AdminLogin = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { isAdmin, loading: authLoading } = useAdminAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // Get the page the user was trying to access
+    const from = location.state?.from?.pathname || '/admin-review';
+
+    useEffect(() => {
+        // If already admin, redirect away
+        if (!authLoading && isAdmin) {
+            navigate(from, { replace: true });
+        }
+    }, [isAdmin, authLoading, navigate, from]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -19,14 +32,17 @@ const AdminLogin = () => {
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            navigate('/admin-review', { replace: true });
+            // The AdminAuthContext will update 'isAdmin' and the useEffect above will handle the redirect
         } catch (err) {
             console.error("Login failed", err);
             setError('Invalid email or password.');
-        } finally {
             setLoading(false);
         }
     };
+
+    if (authLoading) {
+        return <div className="spinner">Checking access...</div>;
+    }
 
     return (
         <div className="payment-container" style={{ justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
@@ -55,7 +71,7 @@ const AdminLogin = () => {
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                style={{ border: 'none', boxShadow: 'none' }} // Override default input styles
+                                style={{ border: 'none', boxShadow: 'none' }}
                                 required
                             />
                         </div>

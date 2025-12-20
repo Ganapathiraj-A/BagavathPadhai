@@ -1,8 +1,51 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Helper function to check if user is an admin
+    function isAdmin() {
+      return request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Admins collection: Anyone authenticated can read (to check role), no one can write via app
+    match /admins/{adminId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Transactions: Any authenticated user can create. Only Admins can list all or update/delete.
+    match /transactions/{txId} {
+      allow read: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+      allow create: if request.auth != null;
+      allow update, delete: if isAdmin();
+    }
+
+    // Transaction Images: Same as transactions
+    match /transaction_images/{txId} {
+      allow read: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+      allow create: if request.auth != null;
+      allow update, delete: if isAdmin();
+    }
+
+    // Catalog data: Publicly readable, writeable only by admins
+    match /programs/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /schedule/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /programTypes/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Global fallback: Deny everything else
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if isAdmin();
     }
   }
 }

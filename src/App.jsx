@@ -25,6 +25,9 @@ import EventRegistration from './pages/EventRegistration';
 import PaymentFlow from './pages/PaymentFlow';
 import AdminLogin from './pages/AdminLogin';
 
+import ProtectedRoute from './components/ProtectedRoute';
+import { AdminAuthProvider } from './context/AdminAuthContext';
+
 function AnimatedRoutes() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -69,46 +72,32 @@ function AnimatedRoutes() {
         <Route path="/videos" element={<Videos />} />
         <Route path="/pdf-books" element={<PdfBooks />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/configuration" element={<Configuration />} />
-        <Route path="/program" element={<ProgramManagement />} />
-        <Route path="/configuration/program-types" element={<ProgramTypesManagement />} />
-
-        <Route path="/conversations/programs" element={<ProgramConversations />} />
-        <Route path="/schedule" element={<AyyasSchedule />} />
-        <Route path="/schedule/manage" element={<ScheduleManagement />} />
         <Route path="/my-registrations" element={<MyRegistrations />} />
-        <Route path="/admin-review" element={<AdminReview />} />
         <Route path="/event-registration" element={<EventRegistration />} />
         <Route path="/payment-flow" element={<PaymentFlow />} />
         <Route path="/admin-login" element={<AdminLogin />} />
+
+        {/* Admin Routes */}
+        <Route path="/configuration" element={<ProtectedRoute><Configuration /></ProtectedRoute>} />
+        <Route path="/program" element={<ProtectedRoute><ProgramManagement /></ProtectedRoute>} />
+        <Route path="/configuration/program-types" element={<ProtectedRoute><ProgramTypesManagement /></ProtectedRoute>} />
+        <Route path="/conversations/programs" element={<ProtectedRoute><ProgramConversations /></ProtectedRoute>} />
+        <Route path="/schedule/manage" element={<ProtectedRoute><ScheduleManagement /></ProtectedRoute>} />
+        <Route path="/admin-review" element={<ProtectedRoute><AdminReview /></ProtectedRoute>} />
+
+        {/* Public view but management is admin */}
+        <Route path="/schedule" element={<AyyasSchedule />} />
       </Routes>
     </AnimatePresence>
   );
 }
 
-import { auth } from './firebase';
-import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
-
 function App() {
-  useEffect(() => {
-    // Authenticate anonymously if not already signed in
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log("User signed in:", user.uid);
-      } else {
-        console.log("No user, signing in anonymously...");
-        signInAnonymously(auth).catch((error) => {
-          console.error("Anonymous auth failed", error);
-        });
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
   return (
     <Router>
-      <AnimatedRoutes />
+      <AdminAuthProvider>
+        <AnimatedRoutes />
+      </AdminAuthProvider>
     </Router>
   );
 }

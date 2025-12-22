@@ -145,7 +145,7 @@ const PaymentFlow = () => {
 
     const renderQrView = () => (
         <div className="center-content">
-            <h2>Click Image to Pay</h2>
+            <h2 style={{ textAlign: 'center' }}>Click Image to Pay</h2>
             <div
                 className="qr-container"
                 onClick={async () => {

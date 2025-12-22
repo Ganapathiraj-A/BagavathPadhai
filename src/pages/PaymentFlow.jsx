@@ -178,7 +178,7 @@ const PaymentFlow = () => {
         <div className="instructions-container" style={{ paddingBottom: '80px', textAlign: 'center' }}>
             <h2 style={{ textAlign: 'center' }}>Payment Instructions</h2>
             <p style={{ fontSize: '0.9rem', color: '#6b7280', margin: '4px 0 16px 0' }}>
-                ⬇️ Scroll below to Proceed ⬇️
+                ⬇️ After viewing Instructions - Scroll below to Proceed ⬇️
             </p>
 
             <div style={{

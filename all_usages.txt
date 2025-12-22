@@ -1,0 +1,9 @@
+src/context/AdminAuthContext.jsx:export const useAdminAuth = () => useContext(AdminAuthContext);
+src/pages/Home.jsx:import { useAdminAuth } from '../context/AdminAuthContext';
+src/pages/Home.jsx:    const { user, isAdmin } = useAdminAuth();
+src/pages/AdminLogin.jsx:import { useAdminAuth } from '../context/AdminAuthContext';
+src/pages/AdminLogin.jsx:    const { user, isAdmin, isPending, loading: authLoading, setIsPending } = useAdminAuth();
+src/pages/Configuration.jsx:import { useAdminAuth } from '../context/AdminAuthContext';
+src/pages/Configuration.jsx:    const { user } = useAdminAuth();
+src/components/ProtectedRoute.jsx:import { useAdminAuth } from '../context/AdminAuthContext';
+src/components/ProtectedRoute.jsx:    const { isAdmin, role, hasAccess, loading } = useAdminAuth();

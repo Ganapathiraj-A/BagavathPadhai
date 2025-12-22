@@ -172,6 +172,23 @@ const ManageUsers = () => {
                                     {isEditing ? 'Save Changes' : 'Add User'}
                                 </button>
                             </div>
+
+                            {isEditing && (
+                                <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '15px', textAlign: 'center' }}>
+                                    <button
+                                        onClick={() => {
+                                            if (confirm(`Revoke access for ${selectedUser.email}?`)) {
+                                                handleRevoke(selectedUser.id, selectedUser.email);
+                                                setSelectedUser(null);
+                                            }
+                                        }}
+                                        style={{ color: '#dc2626', background: 'none', border: 'none', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', margin: '0 auto' }}
+                                    >
+                                        <Trash2 size={16} />
+                                        Revoke Access
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -215,35 +232,25 @@ const ManageUsers = () => {
                         {admins.map(admin => (
                             <div
                                 key={admin.id}
-                                style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                onClick={() => openEditModal(admin)}
+                                style={{
+                                    backgroundColor: 'white',
+                                    padding: '1.25rem',
+                                    borderRadius: '0.75rem',
+                                    border: '1px solid #e5e7eb',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    cursor: 'pointer'
+                                }}
+                                className="admin-row-hover"
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                    <div style={{ backgroundColor: '#eff6ff', padding: '0.5rem', borderRadius: '0.5rem', color: '#2563eb' }}>
-                                        <Shield size={20} />
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#111827' }}>{admin.email}</div>
+                                    <div style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '2px' }}>
+                                        {admin.role || 'ADMIN'}
+                                        {admin.role === 'POWER_USER' && ` (${admin.permissions?.length || 0} screens)`}
                                     </div>
-                                    <div>
-                                        <div style={{ fontWeight: 600 }}>{admin.email}</div>
-                                        <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-                                            {admin.role || 'ADMIN'}
-                                            {admin.role === 'POWER_USER' && ` (${admin.permissions?.length || 0} screens)`}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <button
-                                        onClick={() => openEditModal(admin)}
-                                        style={{ padding: '0.5rem', background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer' }}
-                                        title="Edit Role/Permissions"
-                                    >
-                                        <Edit size={18} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleRevoke(admin.id, admin.email)}
-                                        style={{ padding: '0.5rem', background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
-                                        title="Revoke Access"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
                                 </div>
                             </div>
                         ))}

@@ -18,6 +18,7 @@ const Programs = () => {
     const [specificProgram, setSpecificProgram] = useState(null); // Separate state for linked program
     const [loading, setLoading] = useState(true);
     const [specificLoading, setSpecificLoading] = useState(false);
+    const [viewingBanner, setViewingBanner] = useState(null);
     const [showTextDetails, setShowTextDetails] = useState(false);
 
 
@@ -116,6 +117,39 @@ const Programs = () => {
         fetchSpecificProgram();
     }, [viewingProgramId, programs, specificProgram]);
 
+    // Fetch Banner on Demand
+    useEffect(() => {
+        const fetchBanner = async () => {
+            if (!viewingProgram) {
+                setViewingBanner(null);
+                return;
+            }
+
+            // Backward Compatibility: Check if banner is already in program object
+            if (viewingProgram.programBanner) {
+                setViewingBanner(viewingProgram.programBanner);
+                return;
+            }
+
+            // New Logic: Fetch from separate collection
+            if (viewingProgram.hasBanner) {
+                try {
+                    const { doc, getDoc } = await import('firebase/firestore');
+                    const bannerRef = doc(db, 'program_banners', viewingProgram.id);
+                    const snap = await getDoc(bannerRef);
+                    if (snap.exists()) {
+                        setViewingBanner(snap.data().banner);
+                    }
+                } catch (e) {
+                    console.error("Banner fetch failed", e);
+                }
+            } else {
+                setViewingBanner(null);
+            }
+        };
+        fetchBanner();
+    }, [viewingProgram]);
+
 
 
     const handleCopy = async (text) => {
@@ -140,13 +174,15 @@ const Programs = () => {
     };
 
     const handleShareBanner = async (program) => {
-        if (!program || !program.programBanner) {
+        const bannerData = program.programBanner || (program.id === viewingProgram?.id ? viewingBanner : null);
+
+        if (!bannerData) {
             alert('No banner available for this program.');
             return;
         }
 
         try {
-            const base64Data = program.programBanner;
+            const base64Data = bannerData;
             // Extract base64 part if it contains data prefix
             const cleanBase64 = base64Data.split(',')[1] || base64Data;
             const fileName = `banner_${Date.now()}.jpg`;
@@ -278,13 +314,13 @@ ${program.programDescription ? `📝 *Description:*\n${program.programDescriptio
                             }}
                         >
                             {/* Image First - Only if no text details shown */}
-                            {viewingProgram.programBanner && !showTextDetails && (
+                            {viewingBanner && !showTextDetails && (
                                 <div
                                     style={{ marginBottom: '1.5rem', cursor: 'pointer' }}
                                     onClick={() => setShowTextDetails(true)}
                                 >
                                     <img
-                                        src={viewingProgram.programBanner}
+                                        src={viewingBanner}
                                         alt="Program Banner"
                                         style={{
                                             width: '100%',
@@ -297,16 +333,16 @@ ${program.programDescription ? `📝 *Description:*\n${program.programDescriptio
 
 
                             {/* Details Section - Logic: Show if NO banner OR if toggle is active (REPLACES banner) */}
-                            {(!viewingProgram.programBanner || showTextDetails) && (
+                            {(!viewingBanner || showTextDetails) && (
                                 <div
                                     style={{
                                         display: 'grid',
                                         gap: '1.5rem',
                                         color: '#374151',
-                                        cursor: viewingProgram.programBanner ? 'pointer' : 'default',
+                                        cursor: viewingBanner ? 'pointer' : 'default',
                                         marginBottom: '1.5rem'
                                     }}
-                                    onClick={() => viewingProgram.programBanner && setShowTextDetails(false)}
+                                    onClick={() => viewingBanner && setShowTextDetails(false)}
                                 >
                                     <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#111827', margin: 0 }}>
                                         {viewingProgram.programName}

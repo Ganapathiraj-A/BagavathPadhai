@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Calendar as CalendarIcon, ChevronDown, ChevronUp } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { db, auth } from '../firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc, query, where, orderBy, limit } from 'firebase/firestore';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { LogOut } from 'lucide-react';
 import { signOut } from 'firebase/auth';
@@ -186,6 +186,22 @@ const ProgramManagement = () => {
 
             if (isOtherCity) {
                 setCitySearch(editingProgram.programCity);
+            }
+
+            // Fetch separate banner if inline one is missing and hasBanner is true
+            if (!editingProgram.programBanner && editingProgram.hasBanner) {
+                const fetchBanner = async () => {
+                    try {
+                        const { getDoc, doc } = await import('firebase/firestore');
+                        const snap = await getDoc(doc(db, 'program_banners', editingProgram.id));
+                        if (snap.exists()) {
+                            setFormData(prev => ({ ...prev, programBanner: snap.data().banner }));
+                        }
+                    } catch (e) {
+                        console.error("Edit mode banner fetch failed", e);
+                    }
+                };
+                fetchBanner();
             }
         } else if (action === 'add') {
             // Reset form when switching to add mode (optional but good practice)
@@ -379,7 +395,8 @@ const ProgramManagement = () => {
                 programVenue: formData.programVenue,
                 registrationStatus: formData.registrationStatus,
                 lastDateToRegister: formData.lastDateToRegister,
-                programBanner: bannerUrl,
+                // programBanner: bannerUrl, // Moved to separate collection
+                hasBanner: !!bannerUrl,
                 maxParticipants: formData.maxParticipants,
                 ladiesMaxDorm: formData.ladiesMaxDorm,
                 gentsMaxDorm: formData.gentsMaxDorm,
@@ -389,12 +406,23 @@ const ProgramManagement = () => {
                 createdAt: new Date().toISOString()
             };
 
+            let programId;
             if (editingProgram) {
-                await updateDoc(doc(db, 'programs', editingProgram.id), programData);
+                programId = editingProgram.id;
+                await updateDoc(doc(db, 'programs', programId), programData);
                 alert('Program updated successfully!');
             } else {
-                await addDoc(collection(db, 'programs'), programData);
+                const docRef = await addDoc(collection(db, 'programs'), programData);
+                programId = docRef.id;
                 alert('Program added successfully!');
+            }
+
+            // Save Banner separately if present
+            if (bannerImage && bannerUrl) {
+                await setDoc(doc(db, 'program_banners', programId), {
+                    banner: bannerUrl,
+                    updatedAt: new Date().toISOString()
+                });
             }
 
             resetForm();
@@ -419,6 +447,8 @@ const ProgramManagement = () => {
 
             if (window.confirm('Are you sure you want to delete this program?')) {
                 await deleteDoc(doc(db, 'programs', programId));
+                // Also delete banner if exists
+                await deleteDoc(doc(db, 'program_banners', programId)).catch(() => { });
                 alert('Program deleted successfully!');
                 loadPrograms();
             }

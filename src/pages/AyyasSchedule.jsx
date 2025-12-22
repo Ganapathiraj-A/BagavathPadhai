@@ -12,27 +12,24 @@ const AyyasSchedule = () => {
         const fetchSchedules = async () => {
             try {
                 const schedulesRef = collection(db, 'schedules');
-
-                // Get today's date in YYYY-MM-DD format for string comparison
-                // Use a stable comparison to avoid time zone issues: just the date string
-                const today = new Date().toISOString().split('T')[0];
-
-                // Filter for upcoming schedules (fromDate >= today)
-                const q = query(
-                    schedulesRef,
-                    where('fromDate', '>=', today),
-                    orderBy('fromDate', 'asc')
-                );
-
+                const q = query(schedulesRef, orderBy('fromDate', 'asc'));
                 const querySnapshot = await getDocs(q);
+
                 const schedulesList = querySnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
 
-                schedulesList.sort((a, b) => new Date(a.fromDate) - new Date(b.fromDate));
+                const today = new Date().toISOString().split('T')[0];
 
-                setSchedules(schedulesList);
+                // Client-side filter: include ongoing or future schedules
+                const currentAndUpcoming = schedulesList.filter(s => {
+                    const endDate = s.toDate || s.fromDate;
+                    return endDate >= today;
+                });
+
+                // Already sorted by 'fromDate' due to query
+                setSchedules(currentAndUpcoming);
             } catch (error) {
                 console.error("Error fetching schedules: ", error);
             } finally {

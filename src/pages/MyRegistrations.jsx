@@ -103,7 +103,7 @@ const MyRegistrations = () => {
 
             <div className="product-list" style={{ marginTop: '16px', padding: '16px' }}>
                 {loading && <p>Loading...</p>}
-                {!loading && registrations.length === 0 && <p>No transactions found.</p>}
+                {!loading && registrations.length === 0 && <p>You have no program registrations yet.</p>}
 
                 {registrations.map(tx => {
                     const details = getProgramDetails(tx);

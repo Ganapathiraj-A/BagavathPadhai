@@ -80,43 +80,45 @@ const BookStore = () => {
                 display: 'flex',
                 margin: '0 16px',
                 borderBottom: '1px solid #e5e7eb',
-                gap: '24px'
+                gap: '20px',
+                justifyContent: 'space-between',
+                alignItems: 'center'
             }}>
-                {tabs.map(tab => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        style={{
-                            padding: '12px 4px',
-                            border: 'none',
-                            borderBottom: activeTab === tab ? '2px solid var(--color-primary)' : '2px solid transparent',
-                            backgroundColor: 'transparent',
-                            color: activeTab === tab ? 'var(--color-primary)' : '#6b7280',
-                            fontWeight: activeTab === tab ? '600' : '500',
-                            fontSize: '0.95rem',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                        }}
-                    >
-                        {tab}
-                    </button>
-                ))}
-            </div>
+                <div style={{ display: 'flex', gap: '20px' }}>
+                    {tabs.map(tab => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            style={{
+                                padding: '12px 4px',
+                                border: 'none',
+                                borderBottom: activeTab === tab ? '2px solid var(--color-primary)' : '2px solid transparent',
+                                backgroundColor: 'transparent',
+                                color: activeTab === tab ? 'var(--color-primary)' : '#6b7280',
+                                fontWeight: activeTab === tab ? '600' : '500',
+                                fontSize: '0.95rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                            }}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 16px 16px 16px', gap: '8px' }}>
                 <button
                     onClick={() => navigate('/my-orders')}
                     style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
-                        padding: '8px 12px',
-                        backgroundColor: 'white',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '14px',
+                        padding: '12px 4px',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        borderBottom: '2px solid transparent',
+                        fontSize: '0.9rem',
                         fontWeight: 500,
-                        color: '#374151',
+                        color: '#6b7280',
                         cursor: 'pointer'
                     }}
                 >
@@ -124,6 +126,8 @@ const BookStore = () => {
                     My Orders
                 </button>
             </div>
+
+            <div style={{ padding: '16px 16px 0 16px' }}></div>
 
             <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {filteredProducts.map(product => (

@@ -15,10 +15,10 @@ gh release delete $TAG --yes || true
 git tag -d $TAG || true
 git push origin :refs/tags/$TAG || true
 
-gh release create $TAG "$APK_NAME" --title "v2.8.34: Fixed Karma Vinai Title" --notes "Features:
-- Corrected the title for 'Karma Vinai' to 'கர்ம வினை' (it was previously mislabeled as Agamiya Karma).
-- Updated all Tamil category book titles to their Tamil equivalents.
-- Added AI-generated prefaces and introductions for all 22 books."
+gh release create $TAG "$APK_NAME" --title "v2.8.35: Integrated My Orders Tag" --notes "Features:
+- Moved the 'My Orders' button into the tab navigation row for a cleaner, unified one-line layout.
+- Corrected the title for 'Karma Vinai' to 'கர்ம வினை'.
+- Updated all Tamil category book titles to their Tamil equivalents."
 
 echo "---------------------------------------------------"
 echo "Dev Clean Build Published!"

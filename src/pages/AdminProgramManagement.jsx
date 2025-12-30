@@ -99,6 +99,13 @@ const AdminProgramManagement = () => {
             badgeCount: 0 // No specific unread count for schedule management yet
         },
         {
+            title: 'Manage Consultation',
+            subtitle: 'Update teacher contacts and ordering',
+            icon: Phone,
+            path: '/admin/consultation',
+            permission: 'CONSULTATION_MANAGEMENT'
+        },
+        {
             title: 'Program Types',
             subtitle: 'Configure registration formats and fees',
             icon: Code,
@@ -118,13 +125,6 @@ const AdminProgramManagement = () => {
             icon: Users,
             path: '/admin/satsang',
             permission: 'PROGRAM_MANAGEMENT'
-        },
-        {
-            title: 'Manage Consultation',
-            subtitle: 'Update teacher contacts and ordering',
-            icon: Phone,
-            path: '/admin/consultation',
-            permission: 'CONSULTATION_MANAGEMENT'
         }
     ].filter(section => hasAccess(section.permission));
 

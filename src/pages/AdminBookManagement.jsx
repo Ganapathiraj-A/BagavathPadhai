@@ -405,37 +405,38 @@ const AdminBookManagement = () => {
                         <div style={{ padding: '1.5rem 1rem' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 {filteredBooks.map((book, idx) => (
-                                    <div key={book.id} style={{ padding: '0.75rem 1rem', backgroundColor: 'white', borderRadius: '1.25rem', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #e5e7eb' }}>
-                                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flex: 1 }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginRight: '4px' }}>
+                                    <div key={book.id} style={{ padding: '0.75rem 1rem', backgroundColor: 'white', borderRadius: '1.25rem', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid #e5e7eb' }}>
+                                        <div style={{ width: '48px', height: '64px', backgroundColor: '#f3f4f6', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid #e5e7eb', flexShrink: 0 }}>
+                                            {covers[book.id] ? (
+                                                <img src={covers[book.id]} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            ) : (
+                                                <BookOpen size={20} color="#9ca3af" />
+                                            )}
+                                        </div>
+
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{book.title}</h3>
+                                            <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: '2px 0 0 0' }}>₹{book.price} • {book.weight}g</p>
+                                        </div>
+
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleReorder(book.id, -1); }}
                                                     disabled={idx === 0}
-                                                    style={{ border: 'none', background: 'none', cursor: idx === 0 ? 'default' : 'pointer', opacity: idx === 0 ? 0.2 : 1, color: '#f97316', padding: '4px' }}
+                                                    style={{ border: 'none', background: 'none', cursor: idx === 0 ? 'default' : 'pointer', opacity: idx === 0 ? 0.2 : 1, color: '#f97316', padding: '2px' }}
                                                 >
                                                     <ChevronUp size={20} />
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleReorder(book.id, 1); }}
                                                     disabled={idx === filteredBooks.length - 1}
-                                                    style={{ border: 'none', background: 'none', cursor: idx === filteredBooks.length - 1 ? 'default' : 'pointer', opacity: idx === filteredBooks.length - 1 ? 0.2 : 1, color: '#f97316', padding: '4px' }}
+                                                    style={{ border: 'none', background: 'none', cursor: idx === filteredBooks.length - 1 ? 'default' : 'pointer', opacity: idx === filteredBooks.length - 1 ? 0.2 : 1, color: '#f97316', padding: '2px' }}
                                                 >
                                                     <ChevronDown size={20} />
                                                 </button>
                                             </div>
-                                            <div style={{ width: '48px', height: '64px', backgroundColor: '#f3f4f6', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid #e5e7eb' }}>
-                                                {covers[book.id] ? (
-                                                    <img src={covers[book.id]} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                ) : (
-                                                    <BookOpen size={20} color="#9ca3af" />
-                                                )}
-                                            </div>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{book.title}</h3>
-                                                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: '2px 0 0 0' }}>₹{book.price} • {book.weight}g</p>
-                                            </div>
-                                        </div>
-                                        <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem' }}>
+
                                             <button
                                                 onClick={() => setSearchParams({ action: 'edit', id: book.id })}
                                                 style={{ padding: '0.625rem', backgroundColor: '#fff7ed', color: '#f97316', borderRadius: '0.75rem', border: '1px solid #fed7aa', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}

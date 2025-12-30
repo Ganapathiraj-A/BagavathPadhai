@@ -15,9 +15,9 @@ gh release delete $TAG --yes || true
 git tag -d $TAG || true
 git push origin :refs/tags/$TAG || true
 
-gh release create $TAG "$APK_NAME" --title "v2.8.42: Digital Books Tab Navigation" --notes "Features:
-- Implemented Tamil and English tabs in Digital Books section.
-- Aligned UI design with Printed Books for consistency."
+gh release create $TAG "$APK_NAME" --title "v2.8.43: Admin Book Management Layout Fixes" --notes "Features:
+- Fixed horizontal text overflow in book list items.
+- Moved reorder up/down arrows to the right end of the card for better spacing."
 
 echo "---------------------------------------------------"
 echo "Dev Clean Build Published!"

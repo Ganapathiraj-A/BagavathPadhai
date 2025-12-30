@@ -154,9 +154,9 @@ const Home = () => {
     // Menu Definitions
     const baseMenu = [
         { title: "About Bagavath Ayya", icon: User, path: "/about", delay: 0.1 },
-        { title: "Books & Media", icon: BookOpen, path: "/books", delay: 0.2 },
-        { title: "Programs", icon: Calendar, path: "/programs", delay: 0.4 },
-        { title: "Donations", icon: ShoppingCart, path: "/donations", delay: 0.45 },
+        { title: "Programs", icon: Calendar, path: "/programs", delay: 0.2 },
+        { title: "Books & Media", icon: BookOpen, path: "/books", delay: 0.3 },
+        { title: "Donations", icon: ShoppingCart, path: "/donations", delay: 0.4 },
         { title: "Contact", icon: Mail, path: "/contact", delay: 0.5 }
     ];
 

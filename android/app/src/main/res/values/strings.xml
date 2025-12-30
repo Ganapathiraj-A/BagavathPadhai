@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">SB Clean V4</string>
+    <string name="app_name">Sri Bagavath</string>
     <string name="title_activity_main">SB Clean V4</string>
     <string name="package_name">com.bhavathpathai.app.dev</string>
     <string name="custom_url_scheme">com.bhavathpathai.app.dev</string>

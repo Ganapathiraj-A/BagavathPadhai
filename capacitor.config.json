@@ -1,6 +1,6 @@
 {
     "appId": "com.bhavathpathai.app.dev",
-    "appName": "SB Clean V4",
+    "appName": "Sri Bagavath",
     "webDir": "dist",
     "plugins": {
         "GoogleAuth": {

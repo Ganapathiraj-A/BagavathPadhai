@@ -11,11 +11,11 @@ admin.initializeApp({
 const db = admin.firestore();
 
 async function verify() {
-    const snapshot = await db.collection('books').get();
-    console.log(`Total books in Firestore: ${snapshot.size}`);
+    const snapshot = await db.collection('books').where('category', '==', 'Tamil Books').get();
+    console.log(`Found ${snapshot.size} Tamil books:`);
     snapshot.forEach(doc => {
         const data = doc.data();
-        console.log(`- "${data.title}" | Category: ${data.category}`);
+        console.log(`- "${data.title}"`);
     });
 }
 

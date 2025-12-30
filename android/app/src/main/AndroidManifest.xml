@@ -45,6 +45,9 @@
         </provider>
 
         <meta-data android:name="com.codetrixstudio.capacitor.googleauth.CLIENT_ID" android:value="@string/server_client_id" />
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="ocr" />
     </application>
 
     <!-- Permissions -->

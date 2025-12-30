@@ -58,25 +58,20 @@ const Contact = () => {
                     <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#111827', marginBottom: '2rem', textAlign: 'center' }}>Contact Us</h1>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <ContactItem
-                            icon={Mail}
-                            content="Info@sribagavath.org"
-                            href="mailto:Info@sribagavath.org"
-                        />
 
                         <ContactItem
                             icon={Phone}
-                            content="+91 99942-05880"
-                            href="tel:+919994205880"
+                            content="+91 79041-18421"
+                            href="tel:+917904118421"
                         />
                         <ContactItem
                             icon={Phone}
-                            content="+91 94432-90559, +91 97891-65555"
+                            content="+91 99942-05880, +91 97891-65555"
                         />
 
                         <ContactItem
                             icon={Globe}
-                            content="sribagavath.com"
+                            content="http://sribagavath.com"
                             href="https://sribagavath.com/"
                         />
 
@@ -87,8 +82,14 @@ const Contact = () => {
                         />
 
                         <ContactItem
+                            icon={MapPin}
+                            content="Sri Bagavath Bhavan, Kodambakkadu, Periyakoundapuram, Karippatti, Salem, Tamil Nadu 636106"
+                            href="https://maps.app.goo.gl/RxVQ3nqtvuk84UWs8"
+                        />
+
+                        <ContactItem
                             icon={Home}
-                            content="Sri Bagavath Mission, 31, Ramalingasamy Street, Ammapet, Salem - 636 003."
+                            content="Registered Office, 31, Ramalingasamy Street, Ammapet, Salem - 636 003."
                         />
                     </div>
                 </motion.div>

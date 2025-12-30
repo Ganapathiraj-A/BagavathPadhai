@@ -7,7 +7,9 @@ import {
 import PageHeader from '../components/PageHeader';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
-const ManagementButton = ({ title, subtitle, icon: Icon, path, delay, color = '#f97316', bgColor = '#fff7ed' }) => {
+import { useUnseenCounts } from '../hooks/useUnseenCounts';
+
+const ManagementButton = ({ title, subtitle, icon: Icon, path, delay, color = '#f97316', bgColor = '#fff7ed', badgeCount = 0 }) => {
     const navigate = useNavigate();
 
     return (
@@ -29,7 +31,8 @@ const ManagementButton = ({ title, subtitle, icon: Icon, path, delay, color = '#
                 alignItems: 'center',
                 gap: '1.25rem',
                 textAlign: 'left',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                position: 'relative'
             }}
         >
             <div style={{
@@ -43,6 +46,29 @@ const ManagementButton = ({ title, subtitle, icon: Icon, path, delay, color = '#
             }}>
                 <Icon size={24} />
             </div>
+            {badgeCount > 0 && (
+                <div style={{
+                    position: 'absolute',
+                    top: '-5px',
+                    right: '-5px',
+                    backgroundColor: '#ef4444',
+                    color: 'white',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold',
+                    minWidth: '20px',
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '9999px',
+                    padding: '0 6px',
+                    boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)',
+                    border: '2px solid white',
+                    zIndex: 10
+                }}>
+                    {badgeCount > 99 ? '99+' : badgeCount}
+                </div>
+            )}
             <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827' }}>{title}</span>
                 {subtitle && <span style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '2px' }}>{subtitle}</span>}
@@ -54,6 +80,7 @@ const ManagementButton = ({ title, subtitle, icon: Icon, path, delay, color = '#
 const AdminProgramManagement = () => {
     const navigate = useNavigate();
     const { hasAccess } = useAdminAuth();
+    const counts = useUnseenCounts();
 
     const sections = [
         {
@@ -71,10 +98,10 @@ const AdminProgramManagement = () => {
             permission: 'PROGRAM_MANAGEMENT'
         },
         {
-            title: 'Sathsang',
-            subtitle: 'Manage city-wide Sathsang events',
+            title: 'Satsang',
+            subtitle: 'Manage city-wide Satsang events',
             icon: Users,
-            path: '/admin/sathsang',
+            path: '/admin/satsang',
             permission: 'PROGRAM_MANAGEMENT'
         },
         {
@@ -90,6 +117,14 @@ const AdminProgramManagement = () => {
             icon: Phone,
             path: '/admin/consultation',
             permission: 'CONSULTATION_MANAGEMENT'
+        },
+        {
+            title: "Ayya's Schedule",
+            subtitle: 'Manage upcoming spiritual schedules',
+            icon: Calendar,
+            path: '/schedule/manage',
+            permission: 'SCHEDULE_MANAGEMENT',
+            badgeCount: 0 // No specific unread count for schedule management yet
         }
     ].filter(section => hasAccess(section.permission));
 
@@ -115,6 +150,7 @@ const AdminProgramManagement = () => {
                             key={section.path}
                             {...section}
                             delay={index * 0.1}
+                            badgeCount={section.badgeCount}
                         />
                     ))
                 )}

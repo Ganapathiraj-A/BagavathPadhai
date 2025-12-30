@@ -23,19 +23,24 @@ export const TransactionService = {
 
         const txData = {
             id: txId,
-            itemName: data.itemName, // Program Name
+            itemName: data.itemName, // Program Name or "Book Order"
             amount: data.amount,
             status: 'PENDING', // PENDING, REGISTERED, HOLD, BNK_VERIFIED, REJECTED
             timestamp: Timestamp.now(),
+            createdAt: new Date().toISOString(),
             hasImage: !!base64Image,
             ocrText: data.ocrText || "",
             parsedAmount: data.parsedAmount || null,
+            itemType: data.itemType || 'PROGRAM', // 'PROGRAM' or 'BOOK'
+            // Bookstore specific
+            orderItems: data.orderItems || [],
+            shippingAddress: data.shippingAddress || null,
             // Additional Fields for Sri Bagavath Registration
-            participantCount: data.participantCount || 1,
+            participantCount: data.participantCount || 0,
             primaryApplicant: data.primaryApplicant || {},
             participants: data.participants || [],
             place: data.place || "",
-            programId: data.programId || null, // Save Program ID
+            programId: data.programId || null,
             programDate: data.programDate || null,
             programCity: data.programCity || null,
             deviceId: TransactionService.getDeviceId(),
@@ -58,9 +63,13 @@ export const TransactionService = {
             StatsService.recordImage(sizeInBytes).catch(() => { });
         }
 
-        // 3. Update Participant Stats
-        const pCount = data.participantCount || (data.participants?.length) || 1;
-        StatsService.recordRegistration(pCount, true).catch(() => { });
+        // 3. Update Stats
+        if (data.itemType === 'BOOK') {
+            StatsService.recordBookOrder(data.amount, true).catch(() => { });
+        } else {
+            const pCount = data.participantCount || (data.participants?.length) || 1;
+            StatsService.recordRegistration(pCount, true).catch(() => { });
+        }
 
         return txId;
     },
@@ -133,8 +142,12 @@ export const TransactionService = {
             // Also try delete image (fire and forget)
             deleteDoc(doc(db, "transaction_images", id)).catch(e => console.warn("Img delete failed", e));
             // Update Stats (Decrement)
-            const count = snap.data().participantCount || (snap.data().participants?.length) || 1;
-            StatsService.recordRegistration(count, false).catch(() => { });
+            if (snap.data().itemType === 'BOOK') {
+                StatsService.recordBookOrder(snap.data().amount, false).catch(() => { });
+            } else {
+                const count = snap.data().participantCount || (snap.data().participants?.length) || 1;
+                StatsService.recordRegistration(count, false).catch(() => { });
+            }
         }
     },
 
@@ -173,6 +186,72 @@ export const TransactionService = {
         } catch (e) {
             console.error("Error checking registrations", e);
             return false;
+        }
+    },
+
+    // Archive Transaction (Move to Storage)
+    archiveTransaction: async (id) => {
+        try {
+            const txRef = doc(db, "transactions", id);
+            const txSnap = await getDoc(txRef);
+
+            if (txSnap.exists()) {
+                const data = txSnap.data();
+                // 1. Copy to archived_transactions
+                await setDoc(doc(db, "archived_transactions", id), {
+                    ...data,
+                    archivedAt: new Date().toISOString()
+                });
+
+                // 2. Handle associated image
+                const imgRef = doc(db, "transaction_images", id);
+                const imgSnap = await getDoc(imgRef);
+                if (imgSnap.exists()) {
+                    await setDoc(doc(db, "archived_transaction_images", id), imgSnap.data());
+                    await deleteDoc(imgRef);
+                }
+
+                // 3. Delete from active
+                await deleteDoc(txRef);
+                return true;
+            }
+            return false;
+        } catch (e) {
+            console.error("Archive transaction failed", e);
+            throw e;
+        }
+    },
+
+    // Archive Program (Move to Storage)
+    archiveProgram: async (id) => {
+        try {
+            const progRef = doc(db, "programs", id);
+            const progSnap = await getDoc(progRef);
+
+            if (progSnap.exists()) {
+                const data = progSnap.data();
+                // 1. Copy to archived_programs
+                await setDoc(doc(db, "archived_programs", id), {
+                    ...data,
+                    archivedAt: new Date().toISOString()
+                });
+
+                // 2. Handle associated banner
+                const bannerRef = doc(db, "program_banners", id);
+                const bannerSnap = await getDoc(bannerRef);
+                if (bannerSnap.exists()) {
+                    await setDoc(doc(db, "archived_program_banners", id), bannerSnap.data());
+                    await deleteDoc(bannerRef);
+                }
+
+                // 3. Delete from active
+                await deleteDoc(progRef);
+                return true;
+            }
+            return false;
+        } catch (e) {
+            console.error("Archive program failed", e);
+            throw e;
         }
     }
 };

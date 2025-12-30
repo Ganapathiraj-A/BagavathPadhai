@@ -112,7 +112,7 @@ const Consultation = () => {
             <PageHeader
                 title="Consultation"
                 leftAction={
-                    <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}>
+                    <button onClick={() => navigate('/programs')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}>
                         <ChevronLeft size={24} />
                     </button>
                 }

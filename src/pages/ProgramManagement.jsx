@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Calendar as CalendarIcon, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Edit2, Trash2, Calendar as CalendarIcon, ChevronDown, ChevronUp, Package } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { db, auth } from '../firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc, query, where, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc, query, where, orderBy, limit, serverTimestamp } from 'firebase/firestore';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { LogOut } from 'lucide-react';
 import { signOut } from 'firebase/auth';
@@ -14,6 +14,7 @@ import { tamilnaduCities } from '../data/tamilnaduCities';
 import { TransactionService } from '../services/TransactionService';
 import { StatsService } from '../services/StatsService';
 import { increment as firestoreIncrement } from 'firebase/firestore';
+import { useUnseenCounts } from '../hooks/useUnseenCounts';
 
 // Helper to compress image to Base64
 // Helper to compress image to Base64
@@ -118,6 +119,7 @@ const ProgramManagement = () => {
         }
     };
     const [searchParams, setSearchParams] = useSearchParams();
+    const counts = useUnseenCounts();
     const [programs, setPrograms] = useState([]);
     const [programTypes, setProgramTypes] = useState([]);
     const [bannerImage, setBannerImage] = useState(null);
@@ -431,9 +433,15 @@ const ProgramManagement = () => {
                 const sizeInBytes = bannerUrl.length * 0.75;
                 StatsService.recordImage(sizeInBytes, 'BANNER').catch(() => { });
             }
-
-            resetForm();
+            setSearchParams({});
+            setBannerImage(null);
             loadPrograms();
+
+            // Refresh metadata for notifications
+            await setDoc(doc(db, 'system', 'metadata'), {
+                lastUpdated_programs: serverTimestamp()
+            }, { merge: true });
+
         } catch (error) {
             console.error('Error saving program:', error);
             alert('Error saving program: ' + error.message);
@@ -459,6 +467,11 @@ const ProgramManagement = () => {
                 // Update Stats
                 StatsService.recordProgram(false).catch(() => { });
                 alert('Program deleted successfully!');
+
+                // Refresh metadata for notifications
+                await setDoc(doc(db, 'system', 'metadata'), {
+                    lastUpdated_programs: serverTimestamp()
+                }, { merge: true });
                 loadPrograms();
             }
         } catch (error) {
@@ -579,6 +592,38 @@ const ProgramManagement = () => {
                     >
                         <Trash2 size={18} />
                     </button>
+                    {activeTab === 'history' && (
+                        <button
+                            onClick={async () => {
+                                if (confirm("Move this program to Storage?")) {
+                                    setLoading(true);
+                                    try {
+                                        await TransactionService.archiveProgram(program.id);
+
+                                        // Refresh metadata for notifications
+                                        await setDoc(doc(db, 'system', 'metadata'), {
+                                            lastUpdated_programs: serverTimestamp()
+                                        }, { merge: true });
+
+                                        alert("Program moved to storage successfully");
+                                        loadPrograms();
+                                    } catch (e) { alert("Archive Failed"); }
+                                    setLoading(false);
+                                }
+                            }}
+                            style={{
+                                padding: '0.5rem',
+                                backgroundColor: '#4f46e5',
+                                color: 'white',
+                                borderRadius: '0.375rem',
+                                cursor: 'pointer',
+                                border: 'none'
+                            }}
+                            title="Move to Storage"
+                        >
+                            <Package size={18} />
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

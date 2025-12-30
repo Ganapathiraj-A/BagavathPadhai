@@ -167,7 +167,7 @@ const PdfBooks = () => {
               textAlign: 'center'
             }}
           >
-            PDF Books
+            Digital Books
           </h1>
 
           {/* Initial View – Two Buttons */}

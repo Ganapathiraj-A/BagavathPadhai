@@ -5,7 +5,7 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { Lock, Mail, Chrome } from 'lucide-react';
+import { Lock, Mail, Chrome, RefreshCw } from 'lucide-react';
 import '../components/RegistrationStyles.css';
 
 const AdminLogin = () => {
@@ -176,10 +176,51 @@ const AdminLogin = () => {
                         <div style={{ textAlign: 'center', padding: '1rem' }}>
                             <div style={{ marginBottom: '1.5rem', color: '#4b5563' }}>
                                 <p>Signed in as: <b>{user.email}</b></p>
-                                <div style={{ backgroundColor: '#fef2f2', color: '#dc2626', padding: '1rem', borderRadius: '0.75rem', marginTop: '1rem' }}>
-                                    <b>Unauthorized</b>
-                                    <p style={{ fontSize: '13px', marginTop: '0.5rem' }}>You do not have administrative privileges. Please contact an administrator to grant you access.</p>
+                                <div style={{ backgroundColor: isPending ? '#fef3c7' : '#fef2f2', color: isPending ? '#d97706' : '#dc2626', padding: '1rem', borderRadius: '0.75rem', marginTop: '1rem' }}>
+                                    <b>{isPending ? 'Approval Pending' : 'Unauthorized'}</b>
+                                    <p style={{ fontSize: '13px', marginTop: '0.5rem' }}>
+                                        {isPending
+                                            ? "Your request is being reviewed. Please wait for an administrator to approve."
+                                            : "You do not have administrative privileges. Request access or contact an admin."}
+                                    </p>
                                 </div>
+                                {isPending && (
+                                    <button
+                                        onClick={async () => {
+                                            setLoading(true);
+                                            await checkAdminStatus(user.uid);
+                                            setLoading(false);
+                                        }}
+                                        disabled={loading}
+                                        style={{
+                                            marginTop: '1rem',
+                                            padding: '0.5rem 1rem',
+                                            backgroundColor: '#f3f4f6',
+                                            border: '1px solid #d1d5db',
+                                            borderRadius: '0.5rem',
+                                            color: '#374151',
+                                            fontSize: '0.875rem',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            margin: '1rem auto 0 auto'
+                                        }}
+                                    >
+                                        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                                        Refresh Status
+                                    </button>
+                                )}
+                                {!isPending && !isAdmin && (
+                                    <button
+                                        onClick={handleRequestAccess}
+                                        disabled={loading}
+                                        className="btn-primary full-width"
+                                        style={{ marginTop: '1rem' }}
+                                    >
+                                        {loading ? 'Sending Request...' : 'Request Admin Access'}
+                                    </button>
+                                )}
                             </div>
                             <button type="button" onClick={handleSignOut} style={{ color: '#6b7280', background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer' }}>Sign out</button>
                         </div>

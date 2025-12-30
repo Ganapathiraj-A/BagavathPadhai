@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Check, Trash2, Rewind, AlertCircle, X, LogOut } from 'lucide-react';
+import { ChevronLeft, Check, Trash2, Rewind, AlertCircle, X, LogOut, Package } from 'lucide-react';
 import { TransactionService } from '../services/TransactionService';
 import PageHeader from '../components/PageHeader';
 import '../components/RegistrationStyles.css';
@@ -43,8 +43,13 @@ const AdminReview = () => {
     };
 
     useEffect(() => {
+        // Update last visit timestamp to clear badges
+        localStorage.setItem('lastVisited_registrations', new Date().toISOString());
+        localStorage.setItem('badge_registrations', '0');
+
         const unsubscribe = TransactionService.streamTransactions((data) => {
-            setAllRegs(data);
+            const registrations = data.filter(tx => tx.itemType === 'PROGRAM');
+            setAllRegs(registrations);
             setLoading(false);
         });
 
@@ -159,11 +164,38 @@ const AdminReview = () => {
         }
     };
 
+    const handleArchive = async (id) => {
+        try {
+            await TransactionService.archiveTransaction(id);
+        } catch (e) {
+            alert("Archive Failed");
+        }
+    };
+
+    const handleArchiveAll = async () => {
+        const toArchive = filteredByProduct.filter(r => r.status === 'BNK_VERIFIED');
+        if (toArchive.length === 0) return;
+
+        if (confirm(`Move ALL ${toArchive.length} Completed transactions to Storage?`)) {
+            setLoading(true);
+            try {
+                for (const tx of toArchive) {
+                    await TransactionService.archiveTransaction(tx.id);
+                }
+                alert("Move to storage successful!");
+            } catch (e) {
+                alert("Archive Failed");
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
     const handleDeleteAllVerified = async () => {
         const toDelete = filteredByProduct.filter(r => r.status === 'BNK_VERIFIED');
         if (toDelete.length === 0) return;
 
-        if (confirm(`Delete ALL ${toDelete.length} Completed transactions?`)) {
+        if (confirm(`FINAL WARNING: This will permanently delete ${toDelete.length} records. Continue?`)) {
             for (const tx of toDelete) {
                 await TransactionService.deleteTransaction(tx.id);
             }
@@ -386,11 +418,16 @@ const AdminReview = () => {
                     })}
                 </div>
 
-                {/* Specific Tab Action: Delete All */}
+                {/* Specific Tab Action: Archive/Delete */}
                 {activeTab === 'BNK_VERIFIED' && getCount('BNK_VERIFIED') > 0 && (
-                    <button className="btn-danger full-width" style={{ marginTop: '8px' }} onClick={handleDeleteAllVerified}>
-                        <Trash2 size={16} /> Delete All Completed ({getCount('BNK_VERIFIED')} Participants)
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                        <button className="btn-approve" style={{ flex: 1, backgroundColor: '#4f46e5', color: 'white' }} onClick={handleArchiveAll}>
+                            <Package size={16} /> Move All to Storage ({getCount('BNK_VERIFIED')} Participants)
+                        </button>
+                        <button className="btn-danger" style={{ padding: '10px' }} onClick={handleDeleteAllVerified}>
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -501,10 +538,15 @@ const AdminReview = () => {
                                     </>
                                 )}
 
-                                {/* VERIFIED Tab Actions */}
                                 {activeTab === 'BNK_VERIFIED' && (
                                     <>
                                         <button className="btn-approve" onClick={() => handleUpdate(tx.id, 'REGISTERED')}><Rewind size={16} /> Revert</button>
+                                        <button
+                                            onClick={() => handleArchive(tx.id)}
+                                            style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', borderRadius: '4px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600 }}
+                                        >
+                                            <Package size={16} /> Storage
+                                        </button>
                                         <button className="btn-danger" onClick={() => handleDelete(tx.id)}><Trash2 size={16} /> Delete</button>
                                     </>
                                 )}

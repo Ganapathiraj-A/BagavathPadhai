@@ -3,7 +3,7 @@ import { cleanupOldSchedules } from '../utils/cleanup';
 import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2, Calendar as CalendarIcon, MapPin } from 'lucide-react';
 import { db, auth } from '../firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, orderBy, where, limit } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, orderBy, where, limit, setDoc, serverTimestamp } from 'firebase/firestore';
 import { LogOut } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
@@ -131,9 +131,12 @@ const ScheduleManagement = () => {
                 await updateDoc(doc(db, 'schedules', editingSchedule.id), scheduleData);
                 alert('Schedule updated successfully!');
             } else {
-                await addDoc(collection(db, 'schedules'), scheduleData);
-                alert('Schedule added successfully!');
             }
+
+            // Update Global Metadata for notification badges
+            await setDoc(doc(db, 'system', 'metadata'), {
+                lastUpdated_schedule: serverTimestamp()
+            }, { merge: true });
 
             resetForm();
             loadSchedules();
@@ -158,6 +161,12 @@ const ScheduleManagement = () => {
             try {
                 await deleteDoc(doc(db, 'schedules', scheduleId));
                 alert('Schedule deleted successfully!');
+
+                // Update Global Metadata
+                await setDoc(doc(db, 'system', 'metadata'), {
+                    lastUpdated_schedule: serverTimestamp()
+                }, { merge: true });
+
                 loadSchedules();
             } catch (error) {
                 console.error('Error deleting schedule:', error);
@@ -253,7 +262,7 @@ const ScheduleManagement = () => {
                         onClick={() => handleEdit(schedule)}
                         style={{
                             padding: '0.5rem',
-                            backgroundColor: '#3b82f6',
+                            backgroundColor: '#f97316',
                             color: 'white',
                             borderRadius: '0.375rem',
                             cursor: 'pointer',

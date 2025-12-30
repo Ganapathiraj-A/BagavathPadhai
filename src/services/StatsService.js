@@ -22,6 +22,16 @@ export const StatsService = {
         });
     },
 
+    // 2.1 Track Book Order
+    recordBookOrder: async (amount, isNew = true) => {
+        const countVal = isNew ? 1 : -1;
+        const amountVal = isNew ? amount : -amount;
+        await StatsService.updateTotals({
+            totalBookOrders: increment(countVal),
+            totalBookRevenue: increment(amountVal)
+        });
+    },
+
     // 3. Track Program
     recordProgram: async (isNew = true) => {
         const val = isNew ? 1 : -1;
@@ -48,65 +58,71 @@ export const StatsService = {
     recalculateTotals: async () => {
         console.log("Starting recalculation...");
         try {
-            // A. Count Programs
+            // A. Count Programs (Active + Archived)
             const progsSnap = await getDocs(collection(db, "programs"));
-            const totalPrograms = progsSnap.size;
+            const archivedProgsSnap = await getDocs(collection(db, "archived_programs"));
+            const totalPrograms = progsSnap.size + archivedProgsSnap.size;
 
-            // B. Count Participants
+            // B. Count Participants & Books (Active + Archived)
             const txSnap = await getDocs(collection(db, "transactions"));
-            let totalParticipants = 0;
-            txSnap.docs.forEach(doc => {
-                const d = doc.data();
-                totalParticipants += (d.participantCount || d.participants?.length || 1);
-            });
+            const archivedTxSnap = await getDocs(collection(db, "archived_transactions"));
 
-            // C. Count Images & Size
+            let totalParticipants = 0;
+            let totalBookOrders = 0;
+            let totalBookRevenue = 0;
+
+            const processTxDoc = (doc) => {
+                const d = doc.data();
+                if (d.itemType === 'BOOK') {
+                    totalBookOrders++;
+                    totalBookRevenue += (d.amount || 0);
+                } else {
+                    totalParticipants += (d.participantCount || d.participants?.length || 1);
+                }
+            };
+
+            txSnap.docs.forEach(processTxDoc);
+            archivedTxSnap.docs.forEach(processTxDoc);
+
+            // C. Count Images & Size (Active + Archived)
             const bannersSnap = await getDocs(collection(db, "program_banners"));
-            const totalBanners = bannersSnap.size;
+            const archivedBannersSnap = await getDocs(collection(db, "archived_program_banners"));
 
             const receiptsSnap = await getDocs(collection(db, "transaction_images"));
-            const totalReceipts = receiptsSnap.size;
+            const archivedReceiptsSnap = await getDocs(collection(db, "archived_transaction_images"));
 
             const onlineBannersSnap = await getDocs(collection(db, "online_meeting_banners"));
-            const sathsangBannersSnap = await getDocs(collection(db, "sathsang_banners"));
-
-            console.log(`Found ${bannersSnap.size} records in program_banners.`);
-            console.log(`Found ${onlineBannersSnap.size} records in online_meeting_banners.`);
-            console.log(`Found ${sathsangBannersSnap.size} records in sathsang_banners.`);
+            const satsangBannersSnap = await getDocs(collection(db, "satsang_banners"));
 
             let totalImageSizeMB = 0;
             const processedBannerIds = new Set();
 
-            // 1. Scan Dedicated Banners
-            bannersSnap.docs.forEach(d => {
+            const processBannerDoc = (d) => {
                 const data = d.data();
                 const content = data.base64 || data.banner || data.image || data.url || data.programBanner;
                 if (content && typeof content === 'string') {
                     totalImageSizeMB += (content.length * 0.75) / (1024 * 1024);
                     processedBannerIds.add(d.id);
                 }
-            });
+            };
 
-            // 1.1 Scan Online Meeting Banners
-            onlineBannersSnap.docs.forEach(d => {
+            const processReceiptDoc = (d) => {
                 const data = d.data();
-                const content = data.banner || data.base64;
+                const content = data.base64 || data.banner || data.image || data.url || data.receipt;
                 if (content && typeof content === 'string') {
                     totalImageSizeMB += (content.length * 0.75) / (1024 * 1024);
                 }
-            });
+            };
 
-            // 1.2 Scan Sathsang Banners
-            sathsangBannersSnap.docs.forEach(d => {
-                const data = d.data();
-                const content = data.banner || data.base64;
-                if (content && typeof content === 'string') {
-                    totalImageSizeMB += (content.length * 0.75) / (1024 * 1024);
-                }
-            });
+            bannersSnap.docs.forEach(processBannerDoc);
+            archivedBannersSnap.docs.forEach(processBannerDoc);
 
-            // 2. Scan Legacy Banners in Programs (if not already processed as dedicated)
-            progsSnap.docs.forEach(d => {
+            onlineBannersSnap.docs.forEach(processBannerDoc);
+            satsangBannersSnap.docs.forEach(processBannerDoc);
+
+            // Scan Legacy Banners in Programs (Active + Archived)
+            const allProgDocs = [...progsSnap.docs, ...archivedProgsSnap.docs];
+            allProgDocs.forEach(d => {
                 const data = d.data();
                 const content = data.programBanner || data.banner;
                 if (!processedBannerIds.has(d.id) && content && typeof content === 'string') {
@@ -115,27 +131,23 @@ export const StatsService = {
                 }
             });
 
-            // 3. Scan Receipts
-            receiptsSnap.docs.forEach(d => {
-                const data = d.data();
-                const content = data.base64 || data.banner || data.image || data.url || data.receipt;
-                if (content && typeof content === 'string') {
-                    totalImageSizeMB += (content.length * 0.75) / (1024 * 1024);
-                }
-            });
+            receiptsSnap.docs.forEach(processReceiptDoc);
+            archivedReceiptsSnap.docs.forEach(processReceiptDoc);
 
             const newTotals = {
                 totalPrograms,
                 totalParticipants,
                 totalBanners: processedBannerIds.size,
                 totalOnlineBanners: onlineBannersSnap.size,
-                totalSathsangBanners: sathsangBannersSnap.size,
-                totalReceipts,
+                totalSatsangBanners: satsangBannersSnap.size,
+                totalReceipts: receiptsSnap.size + archivedReceiptsSnap.size,
                 totalImageSizeMB,
+                totalBookOrders,
+                totalBookRevenue,
                 updatedAt: Timestamp.now()
             };
 
-            console.log("New Totals Calculated:", newTotals);
+            console.log("New Totals Calculated (including archives):", newTotals);
 
             const ref = doc(db, "system_stats", "totals");
             await setDoc(ref, newTotals, { merge: true });
@@ -149,7 +161,7 @@ export const StatsService = {
     // 7. Clear EVERYTHING (Extreme caution)
     clearAllData: async () => {
         try {
-            const collections = ["programs", "program_banners", "transactions", "transaction_images", "online_meetings", "online_meeting_banners", "sathsangs", "sathsang_banners"];
+            const collections = ["programs", "program_banners", "transactions", "transaction_images", "online_meetings", "online_meeting_banners", "satsangs", "satsang_banners"];
 
             for (const colName of collections) {
                 const snap = await getDocs(collection(db, colName));
@@ -165,7 +177,7 @@ export const StatsService = {
                 totalParticipants: 0,
                 totalBanners: 0,
                 totalOnlineBanners: 0,
-                totalSathsangBanners: 0,
+                totalSatsangBanners: 0,
                 totalReceipts: 0,
                 totalImageSizeMB: 0,
                 totalUniqueDevices: 0

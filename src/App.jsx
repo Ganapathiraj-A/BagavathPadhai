@@ -35,12 +35,21 @@ import Consultation from './pages/Consultation';
 import OnlineMeetings from './pages/OnlineMeetings';
 import OnlineMeetingDetails from './pages/OnlineMeetingDetails';
 import OnlineMeetingManagement from './pages/OnlineMeetingManagement';
-import SathsangManagement from './pages/SathsangManagement';
-import SathsangListing from './pages/SathsangListing';
-import SathsangDetails from './pages/SathsangDetails';
-
+import SatsangManagement from './pages/SatsangManagement';
+import SatsangListing from './pages/SatsangListing';
+import SatsangDetails from './pages/SatsangDetails';
+import BookStore from './pages/BookStore';
+import BookStoreCheckout from './pages/BookStoreCheckout';
+import BookStoreManagement from './pages/BookStoreManagement';
+import MyOrders from './pages/MyOrders';
+import Donations from './pages/Donations';
+import MyDonations from './pages/MyDonations';
+import AppSettings from './pages/AppSettings';
+import AdminBookManagement from './pages/AdminBookManagement';
+import BookDetails from './pages/BookDetails';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AdminAuthProvider } from './context/AdminAuthContext';
+import { CartProvider } from './context/CartContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function AnimatedRoutes() {
@@ -90,11 +99,17 @@ function AnimatedRoutes() {
         <Route path="/programs/retreat" element={<Programs />} />
         <Route path="/programs/online" element={<OnlineMeetings />} />
         <Route path="/programs/online/:id" element={<OnlineMeetingDetails />} />
-        <Route path="/programs/sathsang" element={<SathsangListing />} />
-        <Route path="/programs/sathsang/:id" element={<SathsangDetails />} />
+        <Route path="/programs/satsang" element={<SatsangListing />} />
+        <Route path="/programs/satsang/:id" element={<SatsangDetails />} />
         <Route path="/programs/consultation" element={<Consultation />} />
         <Route path="/conversations" element={<Conversations />} />
         <Route path="/books" element={<Books />} />
+        <Route path="/bookstore" element={<BookStore />} />
+        <Route path="/book/:bookId" element={<BookDetails />} />
+        <Route path="/bookstore-checkout" element={<BookStoreCheckout />} />
+        <Route path="/donations" element={<Donations />} />
+        <Route path="/my-donations" element={<MyDonations />} />
+        <Route path="/my-orders" element={<MyOrders />} />
         <Route path="/monthly-magazine" element={<MonthlyMagazine />} />
         <Route path="/audio-books" element={<AudioBooks />} />
         <Route path="/videos" element={<Videos />} />
@@ -115,11 +130,14 @@ function AnimatedRoutes() {
 
         <Route path="/admin/program-management" element={<ProtectedRoute><AdminProgramManagement /></ProtectedRoute>} />
         <Route path="/admin/online-meetings" element={<ProtectedRoute requiredPermission="PROGRAM_MANAGEMENT"><OnlineMeetingManagement /></ProtectedRoute>} />
-        <Route path="/admin/sathsang" element={<ProtectedRoute requiredPermission="PROGRAM_MANAGEMENT"><SathsangManagement /></ProtectedRoute>} />
+        <Route path="/admin/satsang" element={<ProtectedRoute requiredPermission="PROGRAM_MANAGEMENT"><SatsangManagement /></ProtectedRoute>} />
         <Route path="/admin/consultation" element={<ProtectedRoute requiredPermission="CONSULTATION_MANAGEMENT"><ConsultationManagement /></ProtectedRoute>} />
+        <Route path="/admin/bookstore" element={<ProtectedRoute requiredPermission="ADMIN_REVIEW"><BookStoreManagement /></ProtectedRoute>} />
+        <Route path="/admin/books" element={<ProtectedRoute requiredPermission="ADMIN_REVIEW"><AdminBookManagement /></ProtectedRoute>} />
 
         <Route path="/admin-review" element={<ProtectedRoute requiredPermission="ADMIN_REVIEW"><AdminReview /></ProtectedRoute>} />
         <Route path="/admin-dashboard" element={<ProtectedRoute requiredPermission="ADMIN_REVIEW"><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/settings" element={<ProtectedRoute requiredPermission="CONFIGURATION"><AppSettings /></ProtectedRoute>} />
 
         {/* Public view but management is admin */}
         <Route path="/schedule" element={<AyyasSchedule />} />
@@ -146,13 +164,15 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <AdminAuthProvider>
-        <ErrorBoundary>
-          <AnimatedRoutes />
-        </ErrorBoundary>
-      </AdminAuthProvider>
-    </Router>
+    <CartProvider>
+      <Router>
+        <AdminAuthProvider>
+          <ErrorBoundary>
+            <AnimatedRoutes />
+          </ErrorBoundary>
+        </AdminAuthProvider>
+      </Router>
+    </CartProvider>
   );
 }
 

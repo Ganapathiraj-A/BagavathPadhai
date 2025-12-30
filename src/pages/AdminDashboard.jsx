@@ -6,6 +6,50 @@ import { db } from '../firebase';
 import { StatsService } from '../services/StatsService';
 import { doc, getDoc, collection, getDocs, query, where, count, getCountFromServer } from 'firebase/firestore';
 
+import { useUnseenCounts } from '../hooks/useUnseenCounts';
+
+const SystemHealthCard = ({ health }) => (
+    <div style={{
+        background: health?.status === 'good' ? '#f0fdf4' : '#fffbeb',
+        padding: '24px',
+        borderRadius: '16px',
+        border: '1px solid',
+        borderColor: health?.status === 'good' ? '#bbf7d0' : '#fef3c7',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '20px',
+        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+    }}>
+        <div style={{
+            background: health?.status === 'good' ? '#dcfce7' : '#fef3c7',
+            padding: '12px',
+            borderRadius: '12px',
+            color: health?.status === 'good' ? '#16a34a' : '#d97706'
+        }}>
+            <Database size={28} />
+        </div>
+        <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#111827' }}>System Health</h3>
+                <span style={{
+                    padding: '2px 10px',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    textTransform: 'uppercase',
+                    background: health?.status === 'good' ? '#16a34a' : '#d97706',
+                    color: 'white'
+                }}>
+                    {health?.status || 'Good'}
+                </span>
+            </div>
+            <p style={{ margin: 0, fontSize: '14px', color: '#4b5563', lineHeight: 1.4 }}>
+                {health?.reason}
+            </p>
+        </div>
+    </div>
+);
+
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const [stats, setStats] = useState(null);
@@ -113,6 +157,7 @@ const AdminDashboard = () => {
     const handleClearAll = async () => {
         const confirm1 = window.confirm("WARNING: This will delete ALL programs, registrations, and images. THIS CANNOT BE UNDONE. Are you absolutely sure?");
         if (!confirm1) return;
+
         const confirm2 = window.prompt("Type 'DELETE ALL' to confirm (Caps lock on):");
         if (confirm2 !== 'DELETE ALL') return;
 
@@ -172,28 +217,45 @@ const AdminDashboard = () => {
         </div>
     );
 
-    const SystemHealthCard = () => {
-        const isGood = health.status === 'good';
+    const NotificationBanner = () => {
+        const totalPending = counts.registrations + counts.transactions;
+        if (totalPending === 0) return null;
+
         return (
-            <div style={{
-                background: isGood ? '#f0fdf4' : '#fffbeb',
-                padding: '20px',
-                borderRadius: '16px',
-                border: `1px solid ${isGood ? '#bbf7d0' : '#fde68a'}`,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: isGood ? '#22c55e' : '#f59e0b', boxShadow: `0 0 8px ${isGood ? '#22c55e88' : '#f59e0b88'}` }} />
-                    <span style={{ fontSize: '16px', fontWeight: '700', color: isGood ? '#166534' : '#92400e' }}>
-                        System Status: {isGood ? 'Good' : 'Check Resources'}
-                    </span>
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                onClick={() => navigate('/admin-review')}
+                style={{
+                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                    padding: '16px',
+                    borderRadius: '16px',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    boxShadow: '0 10px 15px -3px rgba(239, 68, 68, 0.4)',
+                    marginBottom: '10px'
+                }}
+            >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '12px' }}>
+                        <RefreshCcw size={20} className="animate-spin-slow" />
+                    </div>
+                    <div>
+                        <div style={{ fontWeight: 'bold', fontSize: '16px' }}>Pending Actions Required</div>
+                        <div style={{ fontSize: '14px', opacity: 0.9 }}>
+                            {counts.registrations > 0 && `${counts.registrations} Registrations`}
+                            {counts.registrations > 0 && counts.transactions > 0 && ' & '}
+                            {counts.transactions > 0 && `${counts.transactions} Book Orders`}
+                        </div>
+                    </div>
                 </div>
-                <div style={{ fontSize: '14px', color: isGood ? '#15803d' : '#b45309' }}>
-                    {health.reason}
+                <div style={{ background: 'white', color: '#ef4444', padding: '4px 12px', borderRadius: '20px', fontWeight: '700', fontSize: '14px' }}>
+                    Review
                 </div>
-            </div>
+            </motion.div>
         );
     };
 
@@ -211,10 +273,14 @@ const AdminDashboard = () => {
             <div style={{ padding: '20px', display: 'grid', gap: '20px' }}>
 
                 {/* System Health Section */}
-                <SystemHealthCard />
+                <SystemHealthCard health={health} />
 
-                {/* 1. Active Stats (Today & Future) */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                {/* 1. Stats Grid */}
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                    gap: '12px'
+                }}>
                     <StatCard
                         title="Active Progs"
                         value={stats?.activePrograms}
@@ -227,10 +293,6 @@ const AdminDashboard = () => {
                         icon={Users}
                         color="#ef4444"
                     />
-                </div>
-
-                {/* 2. User User Activity (Row 2) */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <StatCard
                         title="Users Today"
                         value={stats?.todayUsers}
@@ -245,10 +307,6 @@ const AdminDashboard = () => {
                         icon={Users}
                         color="#6366f1"
                     />
-                </div>
-
-                {/* 3. Overall Totals (Row 3) */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <StatCard
                         title="Overall Progs"
                         value={stats?.totalPrograms}
@@ -261,21 +319,24 @@ const AdminDashboard = () => {
                         icon={Users}
                         color="#10b981"
                     />
-                </div>
-
-                {/* 4. Image Stats (Row 4) */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <StatCard
+                        title="Book Orders"
+                        value={stats?.totalBookOrders}
+                        icon={LayoutDashboard}
+                        color="#10b981"
+                    />
+                    <StatCard
+                        title="Book Revenue"
+                        value={stats?.totalBookRevenue}
+                        unit=" ₹"
+                        icon={RefreshCcw}
+                        color="#059669"
+                    />
                     <StatCard
                         title="Program Banners"
                         value={stats?.totalBanners}
                         icon={Image}
                         color="#8b5cf6"
-                    />
-                    <StatCard
-                        title="Receipt Images"
-                        value={stats?.totalReceipts}
-                        icon={Image}
-                        color="#ec4899"
                     />
                     <StatCard
                         title="Online Banners"
@@ -284,17 +345,19 @@ const AdminDashboard = () => {
                         color="#3b82f6"
                     />
                     <StatCard
-                        title="Sathsang Banners"
-                        value={stats?.totalSathsangBanners}
+                        title="Satsang Banners"
+                        value={stats?.totalSatsangBanners}
                         icon={Image}
                         color="#f97316"
                     />
-                </div>
-
-                {/* 5. Total Storage */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
                     <StatCard
-                        title="Total Image Storage Size"
+                        title="Receipt Images"
+                        value={stats?.totalReceipts}
+                        icon={Image}
+                        color="#ec4899"
+                    />
+                    <StatCard
+                        title="Storage Size"
                         value={stats?.totalImageSizeMB?.toFixed(2)}
                         unit="MB"
                         icon={RefreshCcw}

@@ -54,6 +54,9 @@ const Programs = () => {
     useEffect(() => {
         const fetchPrograms = async () => {
             try {
+                // Track visit for badge reset
+                localStorage.setItem('lastVisited_programs', new Date().toISOString());
+
                 const today = new Date().toISOString().split('T')[0];
                 const programsRef = collection(db, 'programs');
                 const q = query(
@@ -296,7 +299,7 @@ ${program.programDescription ? `📝 *Description:*\n${program.programDescriptio
             paddingBottom: '2rem'
         }}>
             <PageHeader
-                title={viewingProgram ? viewingProgram.programName : "Retreats"}
+                title={viewingProgram ? viewingProgram.programName : "Programs"}
                 leftAction={
                     <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}>
                         <ChevronLeft size={24} />
@@ -365,10 +368,10 @@ ${program.programDescription ? `📝 *Description:*\n${program.programDescriptio
                                                 Date & Time
                                             </span>
                                             <div style={{ fontSize: '1.125rem' }}>
-                                                Start: {new Date(viewingProgram.programDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', weekday: 'short' })}
+                                                {new Date(viewingProgram.programDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', weekday: 'short' })}
                                                 {viewingProgram.programEndDate && (
                                                     <>
-                                                        {' '}- End: {new Date(viewingProgram.programEndDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', weekday: 'short' })}
+                                                        {' '}- {new Date(viewingProgram.programEndDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', weekday: 'short' })}
                                                     </>
                                                 )}
                                             </div>
@@ -441,26 +444,29 @@ ${program.programDescription ? `📝 *Description:*\n${program.programDescriptio
                                             <Share2 size={16} />
                                             Text
                                         </button>
-                                        <button
-                                            onClick={() => handleShareBanner(viewingProgram)}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '0.5rem',
-                                                color: 'var(--color-primary)',
-                                                background: 'none',
-                                                border: '1px solid var(--color-primary)',
-                                                padding: '0.5rem 1rem',
-                                                borderRadius: '0.375rem',
-                                                fontSize: '0.875rem',
-                                                fontWeight: 500,
-                                                cursor: 'pointer'
-                                            }}
-                                            title="Share Banner"
-                                        >
-                                            <Share2 size={16} />
-                                            Banner
-                                        </button>
+                                        {viewingBanner && (
+                                            <button
+                                                onClick={() => handleShareBanner(viewingProgram.programName, viewingBanner)}
+                                                className="btn-share-banner"
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.5rem',
+                                                    color: 'var(--color-primary)',
+                                                    background: 'none',
+                                                    border: '1px solid var(--color-primary)',
+                                                    padding: '0.5rem 1rem',
+                                                    borderRadius: '0.375rem',
+                                                    fontSize: '0.875rem',
+                                                    fontWeight: 500,
+                                                    cursor: 'pointer'
+                                                }}
+                                                title="Share Banner"
+                                            >
+                                                <Share2 size={16} />
+                                                Banner
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </motion.div>
@@ -471,16 +477,6 @@ ${program.programDescription ? `📝 *Description:*\n${program.programDescriptio
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
                             >
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    marginBottom: '2rem'
-                                }}>
-                                    <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#111827' }}>
-                                        Upcoming Retreats
-                                    </h1>
-                                </div>
 
                                 <div style={{ textAlign: 'center', marginBottom: '20px' }}>
                                     <button

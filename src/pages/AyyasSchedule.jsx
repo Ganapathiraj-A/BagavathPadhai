@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Share2 } from 'lucide-react';
+import { Calendar, MapPin, Share2, ChevronLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
+import { Share } from '@capacitor/share';
 import { db } from '../firebase';
 import { collection, query, orderBy, getDocs, where } from 'firebase/firestore';
 
 const AyyasSchedule = () => {
+    const navigate = useNavigate();
     const [schedules, setSchedules] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -37,33 +41,44 @@ const AyyasSchedule = () => {
             }
         };
 
-        fetchSchedules();
+        // Track visit for badge reset
+        localStorage.setItem('lastVisited_schedule', new Date().toISOString());
+        fetchSchedules(); // Assuming 'loadSchedules' was a typo and meant 'fetchSchedules'
     }, []);
 
     const handleShare = async (schedule) => {
         if (!schedule) return;
 
-        const shareData = {
-            title: `Ayya's Schedule at ${schedule.place}`,
-            text: `
+        const fromDate = new Date(schedule.fromDate);
+        const toDate = new Date(schedule.toDate);
+
+        const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+        const fromStr = fromDate.toLocaleDateString(undefined, dateOptions);
+        const communitiesStr = toDate.toLocaleDateString(undefined, dateOptions);
+
+        const shareText = `
 *Ayya's Schedule*
 
 📍 *Place:* ${schedule.place}
-📅 *From:* ${new Date(schedule.fromDate).toLocaleDateString()}
-📅 *To:* ${new Date(schedule.toDate).toLocaleDateString()}
-            `.trim(),
-            url: window.location.href
-        };
+📅 *From:* ${fromStr}
+📅 *To:* ${communitiesStr}
+        `.trim();
 
         try {
-            if (navigator.share) {
-                await navigator.share(shareData);
-            } else {
-                await navigator.clipboard.writeText(shareData.text);
-                alert('Schedule details copied to clipboard!');
-            }
+            await Share.share({
+                title: "Ayya's Schedule",
+                text: shareText,
+                dialogTitle: "Share Schedule",
+            });
         } catch (error) {
             console.error('Error sharing:', error);
+            // Fallback for web or if share fails
+            try {
+                await navigator.clipboard.writeText(shareText);
+                alert('Schedule details copied to clipboard!');
+            } catch (clipError) {
+                console.error('Clipboard failed:', clipError);
+            }
         }
     };
 
@@ -85,33 +100,19 @@ const AyyasSchedule = () => {
         <div style={{
             minHeight: '100vh',
             backgroundColor: 'var(--color-surface)',
-            padding: '1.5rem'
+            paddingBottom: '2rem'
         }}>
-            <div style={{ maxWidth: '42rem', margin: '0 auto' }}>
+            <PageHeader
+                title="Ayya's Schedule"
+                leftAction={
+                    <button onClick={() => navigate('/programs')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}>
+                        <ChevronLeft size={24} />
+                    </button>
+                }
+            />
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ maxWidth: '42rem', margin: '0 auto', width: '100%' }}>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                >
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginBottom: '2rem'
-                    }}>
-                        <div style={{
-                            padding: '0.75rem',
-                            borderRadius: '9999px',
-                            backgroundColor: '#fff7ed',
-                            color: 'var(--color-primary)',
-                            marginRight: '1rem'
-                        }}>
-                            <Calendar size={28} />
-                        </div>
-                        <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#111827' }}>
-                            Ayya's Schedule
-                        </h1>
-                    </div>
 
                     {schedules.length === 0 ? (
                         <div style={{
@@ -240,7 +241,7 @@ const AyyasSchedule = () => {
                             ))}
                         </div>
                     )}
-                </motion.div>
+                </div>
             </div>
         </div>
     );

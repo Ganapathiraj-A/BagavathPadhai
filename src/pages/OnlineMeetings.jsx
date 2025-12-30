@@ -12,6 +12,9 @@ const OnlineMeetings = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Track visit for badge reset
+        localStorage.setItem('lastVisited_online_meetings', new Date().toISOString());
+
         const fetchMeetings = async () => {
             try {
                 const today = new Date().toISOString().split('T')[0];
@@ -45,9 +48,6 @@ const OnlineMeetings = () => {
             />
 
             <div style={{ padding: '1.5rem', maxWidth: '42rem', margin: '0 auto', width: '100%' }}>
-                <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#111827', marginBottom: '2rem', textAlign: 'center' }}>
-                    Upcoming Online Meetings
-                </h1>
 
                 {loading ? (
                     <p style={{ textAlign: 'center', color: '#6b7280' }}>Loading upcoming meetings...</p>

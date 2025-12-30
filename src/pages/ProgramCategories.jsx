@@ -3,8 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, Calendar, Video, Users, MessageCircle } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
+import { useUnseenCounts } from '../hooks/useUnseenCounts';
 
-const CategoryButton = ({ title, icon: Icon, path, delay }) => {
+const CategoryButton = ({ title, icon: Icon, path, delay, hasNew }) => {
     const navigate = useNavigate();
 
     return (
@@ -25,7 +26,8 @@ const CategoryButton = ({ title, icon: Icon, path, delay }) => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '1.25rem',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                position: 'relative'
             }}
         >
             <div style={{
@@ -40,6 +42,21 @@ const CategoryButton = ({ title, icon: Icon, path, delay }) => {
                 <Icon size={24} />
             </div>
             <span style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827' }}>{title}</span>
+            {hasNew && (
+                <div style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    backgroundColor: '#ef4444',
+                    color: 'white',
+                    fontSize: '0.7rem',
+                    fontWeight: 'bold',
+                    padding: '2px 8px',
+                    borderRadius: '12px'
+                }}>
+                    NEW
+                </div>
+            )}
         </motion.button>
     );
 };
@@ -47,19 +64,20 @@ const CategoryButton = ({ title, icon: Icon, path, delay }) => {
 const ProgramCategories = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const counts = useUnseenCounts();
 
     // Deep Link Redirection: If an 'id' is present, go straight to Retreat details
     useEffect(() => {
         const programId = searchParams.get('id');
         if (programId) {
-            navigate(`/programs/retreat?id=${programId}`, { replace: true });
+            navigate(`/programs/programs?id=${programId}`, { replace: true });
         }
     }, [searchParams, navigate]);
 
     const categories = [
-        { title: "Retreat", icon: Calendar, path: "/programs/retreat", delay: 0.1 },
+        { title: "Programs", icon: Calendar, path: "/programs/retreat", delay: 0.1 },
         { title: "Online Meetings", icon: Video, path: "/programs/online", delay: 0.2 },
-        { title: "Sathsang", icon: Users, path: "/programs/sathsang", delay: 0.3 },
+        { title: "Satsang", icon: Users, path: "/programs/satsang", delay: 0.3 },
         { title: "Consultation", icon: MessageCircle, path: "/programs/consultation", delay: 0.4 }
     ];
 
@@ -78,15 +96,41 @@ const ProgramCategories = () => {
                 <p style={{ color: '#6b7280', textAlign: 'center', marginBottom: '0.5rem', fontSize: '0.95rem' }}>
                     Select a category to view upcoming programs
                 </p>
-                {categories.map((cat) => (
-                    <CategoryButton
-                        key={cat.path}
-                        title={cat.title}
-                        icon={cat.icon}
-                        path={cat.path}
-                        delay={cat.delay}
-                    />
-                ))}
+                <CategoryButton
+                    title="Programs"
+                    icon={Calendar}
+                    path="/programs/retreat"
+                    delay={0.1}
+                    hasNew={counts.hasNewPrograms}
+                />
+                <CategoryButton
+                    title="Online Meetings"
+                    icon={Video}
+                    path="/programs/online"
+                    delay={0.2}
+                    hasNew={counts.hasNewMeetings}
+                />
+                <CategoryButton
+                    title="Satsang"
+                    subtitle="City-wide spiritual gatherings"
+                    icon={Users}
+                    path="/programs/satsang"
+                    delay={0.3}
+                    hasNew={counts.hasNewSatsangs}
+                />
+                <CategoryButton
+                    title="Ayya's Schedule"
+                    icon={Calendar}
+                    path="/schedule"
+                    delay={0.4}
+                    hasNew={counts.hasNewSchedule}
+                />
+                <CategoryButton
+                    title="Consultation"
+                    icon={MessageCircle}
+                    path="/programs/consultation"
+                    delay={0.5}
+                />
             </div>
         </div>
     );

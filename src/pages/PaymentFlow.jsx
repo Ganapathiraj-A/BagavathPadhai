@@ -18,9 +18,8 @@ const PaymentFlow = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
-    // Initial State from Registration
-    // SBB had "Selection" step. We start with data already.
-    const { amount, programName, participants, primaryApplicant, place, participantCount } = location.state || {};
+    // Initial State from Registration or Book Order
+    const { amount, programName, itemName, participants, primaryApplicant, place, participantCount } = location.state || {};
 
     const [currentStep, setCurrentStep] = useState('QR_VIEW'); // default to QR View
 
@@ -30,7 +29,7 @@ const PaymentFlow = () => {
     const [parsedAmount, setParsedAmount] = useState(null);
     const [ocrStatus, setOcrStatus] = useState("");
     const [submissionAmount, setSubmissionAmount] = useState(amount?.toString() || "");
-    const [submissionName, setSubmissionName] = useState(programName || "");
+    const [submissionName, setSubmissionName] = useState(programName || itemName || "");
     const [loading, setLoading] = useState(false);
     const [viewingImage, setViewingImage] = useState(null);
     const [showFullOcr, setShowFullOcr] = useState(false);
@@ -124,14 +123,18 @@ const PaymentFlow = () => {
         try {
             await TransactionService.recordTransaction({
                 itemName: submissionName,
+                itemType: location.state?.itemType || 'PROGRAM',
                 amount: parseFloat(submissionAmount),
                 ocrText: rawText,
                 parsedAmount: parsedAmount,
+                // Bookstore specific
+                orderItems: location.state?.orderItems || [],
+                shippingAddress: location.state?.shippingAddress || null,
                 // Additional Sri Bagavath Fields
                 participants: participants || [],
                 primaryApplicant: primaryApplicant || {},
                 place: place || "",
-                participantCount: participantCount || 1,
+                participantCount: participantCount || (participants ? participants.length : 0),
                 programId: location.state?.programId || "",
                 programDate: location.state?.programDate || "",
                 programCity: location.state?.programCity || ""
@@ -139,11 +142,15 @@ const PaymentFlow = () => {
 
             // Track Success
             import('../utils/Analytics').then(m => {
-                m.default.trackPaymentSuccess(parseFloat(submissionAmount), location.state?.programId || "");
+                const category = location.state?.itemType === 'BOOK' ? 'book_order' : 'registration';
+                m.default.trackPaymentSuccess(parseFloat(submissionAmount), location.state?.programId || category);
             });
 
-            alert("Transaction Submitted Successfully!\n\nPlease check status at My Registration.");
-            navigate('/my-registrations', { replace: true });
+            let targetPage = '/my-registrations';
+            if (location.state?.itemType === 'BOOK') targetPage = '/my-orders';
+            if (location.state?.itemType === 'DONATION') targetPage = '/my-donations';
+
+            navigate(targetPage, { replace: true });
         } catch (e) {
             alert("Submission Failed: " + e.message);
         } finally {
@@ -180,13 +187,19 @@ const PaymentFlow = () => {
             <p className="hint-text" style={{ textAlign: 'center' }}>
                 Tap the QR code to save UPI ID to clipboard and proceed
             </p>
-            <button className="btn-secondary full-width" style={{ marginTop: '20px' }} onClick={() => navigate('/event-registration', {
-                replace: true,
-                state: {
-                    program: location.state?.program,
-                    savedState: location.state?.savedState
+            <button className="btn-secondary full-width" style={{ marginTop: '20px' }} onClick={() => {
+                if (location.state?.itemType === 'BOOK') {
+                    navigate('/bookstore-checkout', { replace: true, state: location.state?.savedState });
+                } else {
+                    navigate('/event-registration', {
+                        replace: true,
+                        state: {
+                            program: location.state?.program,
+                            savedState: location.state?.savedState
+                        }
+                    });
                 }
-            })}>Back to Details</button>
+            }}>Back to Details</button>
         </div>
     );
 
@@ -243,7 +256,7 @@ const PaymentFlow = () => {
         <div className="submission-container">
             <h2>Complete Registration</h2>
 
-            {/* Registration Summary Section */}
+            {/* Transaction Summary Section */}
             <div style={{
                 background: '#f3f4f6',
                 padding: '16px',
@@ -252,8 +265,8 @@ const PaymentFlow = () => {
                 border: '1px solid #e5e7eb'
             }}>
                 <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#111' }}>
-                    {programName}
-                    {(location.state?.programDate || location.state?.programCity) && (
+                    {submissionName}
+                    {location.state?.itemType !== 'BOOK' && (location.state?.programDate || location.state?.programCity) && (
                         <div style={{ fontSize: '13px', fontWeight: 'normal', color: '#666', marginTop: '2px' }}>
                             {location.state.programDate ? new Date(location.state.programDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                             {location.state.programCity ? ` • ${location.state.programCity}` : ''}
@@ -262,28 +275,45 @@ const PaymentFlow = () => {
                 </h3>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                        <span style={{ color: '#666' }}>Participants</span>
-                        <span style={{ fontWeight: 600 }}>{participantCount}</span>
-                    </div>
-                    {participants && participants.length > 0 && (
-                        <div style={{ paddingLeft: '8px', borderLeft: '2px solid #ddd', margin: '4px 0' }}>
-                            {participants.map((p, i) => (
-                                <div key={i} style={{ fontSize: '12px', color: '#4b5563', marginBottom: '2px' }}>
-                                    {i + 1}. {p.name} ({p.gender}, {p.age})
+                    {location.state?.itemType === 'BOOK' ? (
+                        <>
+                            {location.state?.orderItems?.map((item, i) => (
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                    <span style={{ color: '#666' }}>{item.title} x {item.quantity}</span>
+                                    <span style={{ fontWeight: 600 }}>₹{item.price * item.quantity}</span>
                                 </div>
                             ))}
-                        </div>
-                    )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                        <span style={{ color: '#666' }}>Primary Contact</span>
-                        <span style={{ fontWeight: 600 }}>{primaryApplicant?.name}</span>
-                    </div>
-                    {place && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                            <span style={{ color: '#666' }}>Coming From</span>
-                            <span style={{ fontWeight: 600 }}>{place}</span>
-                        </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginTop: '8px', padding: '8px', background: 'white', borderRadius: '4px' }}>
+                                <span style={{ color: '#666' }}>Shipping to</span>
+                                <span style={{ fontWeight: 600, textAlign: 'right' }}>{location.state?.shippingAddress?.name}<br />{location.state?.shippingAddress?.city}</span>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                <span style={{ color: '#666' }}>Participants</span>
+                                <span style={{ fontWeight: 600 }}>{participantCount}</span>
+                            </div>
+                            {participants && participants.length > 0 && (
+                                <div style={{ paddingLeft: '8px', borderLeft: '2px solid #ddd', margin: '4px 0' }}>
+                                    {participants.map((p, i) => (
+                                        <div key={i} style={{ fontSize: '12px', color: '#4b5563', marginBottom: '2px' }}>
+                                            {i + 1}. {p.name} ({p.gender}, {p.age})
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                <span style={{ color: '#666' }}>Primary Contact</span>
+                                <span style={{ fontWeight: 600 }}>{primaryApplicant?.name}</span>
+                            </div>
+                            {place && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                    <span style={{ color: '#666' }}>Coming From</span>
+                                    <span style={{ fontWeight: 600 }}>{place}</span>
+                                </div>
+                            )}
+                        </>
                     )}
                     <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '8px 0' }} />
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px' }}>

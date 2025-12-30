@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Calendar as CalendarIcon, ChevronLeft, Video, Link as LinkIcon, Clock, User } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { db } from '../firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc, query, where, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc, query, where, orderBy, limit, serverTimestamp } from 'firebase/firestore';
 
 // Helper to compress image to Base64
 const compressImage = (file) => {
@@ -201,6 +201,12 @@ const OnlineMeetingManagement = () => {
             alert('Meeting saved successfully!');
             resetForm();
             loadMeetings();
+
+            // Refresh metadata for notifications
+            await setDoc(doc(db, 'system', 'metadata'), {
+                lastUpdated_online_meetings: serverTimestamp()
+            }, { merge: true });
+
         } catch (error) {
             console.error('Error saving meeting:', error);
             alert('Error: ' + error.message);
@@ -216,6 +222,11 @@ const OnlineMeetingManagement = () => {
                 await deleteDoc(doc(db, 'online_meeting_banners', id)).catch(() => { });
                 alert('Meeting deleted!');
                 loadMeetings();
+
+                // Refresh metadata for notifications
+                await setDoc(doc(db, 'system', 'metadata'), {
+                    lastUpdated_online_meetings: serverTimestamp()
+                }, { merge: true });
             } catch (error) {
                 alert('Delete failed: ' + error.message);
             }

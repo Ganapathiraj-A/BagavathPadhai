@@ -1,0 +1,236 @@
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { ShoppingCart, ClipboardList, ChevronLeft, Plus, Minus, Info } from 'lucide-react';
+import PageHeader from '../components/PageHeader';
+import { db } from '../firebase';
+import { collection, getDocs, query, orderBy, doc, getDoc } from 'firebase/firestore';
+import { useCart } from '../context/CartContext';
+
+const BookStore = () => {
+    const navigate = useNavigate();
+    const { cart, addToCart, removeFromCart } = useCart();
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [covers, setCovers] = useState({});
+    const [activeTab, setActiveTab] = useState('Tamil Books');
+
+    useEffect(() => {
+        loadBooks();
+    }, []);
+
+    const loadBooks = async () => {
+        try {
+            setLoading(true);
+            const querySnapshot = await getDocs(query(collection(db, 'books'), orderBy('title', 'asc')));
+            const loadedBooks = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setProducts(loadedBooks);
+
+            // Fetch covers for books that have them
+            const booksWithCovers = loadedBooks.filter(b => b.hasCover);
+            const coverPromises = booksWithCovers.map(async (book) => {
+                try {
+                    const coverSnap = await getDoc(doc(db, 'book_covers', book.id));
+                    if (coverSnap.exists()) {
+                        return { id: book.id, cover: coverSnap.data().cover };
+                    }
+                } catch (e) {
+                    console.error(`Error fetching cover for ${book.title}:`, e);
+                }
+                return null;
+            });
+
+            const resolvedCovers = await Promise.all(coverPromises);
+            const coverMap = {};
+            resolvedCovers.forEach(c => {
+                if (c) coverMap[c.id] = c.cover;
+            });
+            setCovers(coverMap);
+
+        } catch (error) {
+            console.error('Error loading bookstore books:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const totalCount = Object.values(cart).reduce((a, b) => a + b, 0);
+    const totalPrice = products.reduce((acc, p) => acc + (p.price * (cart[p.id] || 0)), 0);
+
+    const tabs = ['Tamil Books', 'English Books'];
+    const filteredProducts = products.filter(p => p.category === activeTab);
+
+    if (loading) {
+        return (
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb' }}>
+                <p style={{ color: '#6b7280' }}>Loading Bookstore...</p>
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ backgroundColor: '#f9fafb', minHeight: '100vh', paddingBottom: '100px' }}>
+            <PageHeader title="Printed Books" />
+
+            {/* Tabs Navigation */}
+            <div style={{
+                display: 'flex',
+                margin: '0 16px',
+                borderBottom: '1px solid #e5e7eb',
+                gap: '24px'
+            }}>
+                {tabs.map(tab => (
+                    <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        style={{
+                            padding: '12px 4px',
+                            border: 'none',
+                            borderBottom: activeTab === tab ? '2px solid var(--color-primary)' : '2px solid transparent',
+                            backgroundColor: 'transparent',
+                            color: activeTab === tab ? 'var(--color-primary)' : '#6b7280',
+                            fontWeight: activeTab === tab ? '600' : '500',
+                            fontSize: '0.95rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                        }}
+                    >
+                        {tab}
+                    </button>
+                ))}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 16px 16px 16px', gap: '8px' }}>
+                <button
+                    onClick={() => navigate('/my-orders')}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 12px',
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        color: '#374151',
+                        cursor: 'pointer'
+                    }}
+                >
+                    <ClipboardList size={18} />
+                    My Orders
+                </button>
+            </div>
+
+            <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {filteredProducts.map(product => (
+                    <motion.div
+                        key={product.id}
+                        layout
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="card"
+                        onClick={() => navigate(`/book/${product.id}`)}
+                        style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '12px', cursor: 'pointer', position: 'relative' }}
+                    >
+                        <div style={{ width: '60px', height: '80px', backgroundColor: '#f3f4f6', borderRadius: '6px', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #f1f5f9' }}>
+                            {covers[product.id] ? (
+                                <img src={covers[product.id]} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                <div style={{ color: '#9ca3af', fontSize: '10px', textAlign: 'center', padding: '4px' }}>No Cover</div>
+                            )}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.title}</h3>
+                            <p style={{ margin: '4px 0 0 0', color: 'var(--color-primary)', fontWeight: 700, fontSize: '0.95rem' }}>₹{product.price}</p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px', color: '#9ca3af', fontSize: '0.75rem' }}>
+                                <Info size={12} /> Click for details
+                            </div>
+                        </div>
+                        <div
+                            style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+                            onClick={(e) => e.stopPropagation()} // Prevent navigation to details
+                        >
+                            {cart[product.id] > 0 && (
+                                <>
+                                    <button
+                                        onClick={() => removeFromCart(product)}
+                                        style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid #e5e7eb', background: 'white', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                    >
+                                        <Minus size={16} />
+                                    </button>
+                                    <span style={{ fontWeight: 600, minWidth: '20px', textAlign: 'center', fontSize: '1rem' }}>{cart[product.id]}</span>
+                                </>
+                            )}
+                            <button
+                                onClick={() => addToCart(product)}
+                                style={{ width: '32px', height: '32px', borderRadius: '50%', border: 'none', background: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                            >
+                                <Plus size={16} />
+                            </button>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+
+            {filteredProducts.length === 0 && !loading && (
+                <div style={{ padding: '60px 20px', textAlign: 'center', color: '#6b7280' }}>
+                    <p>No books available in this category.</p>
+                </div>
+            )}
+
+            {totalCount > 0 && (
+                <motion.div
+                    initial={{ y: 100 }}
+                    animate={{ y: 0 }}
+                    style={{
+                        position: 'fixed',
+                        bottom: '20px',
+                        left: '20px',
+                        right: '20px',
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'white',
+                        padding: '16px 24px',
+                        borderRadius: '16px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.2)',
+                        zIndex: 100
+                    }}
+                >
+                    <div>
+                        <div style={{ fontSize: '14px', opacity: 0.9 }}>{totalCount} Items</div>
+                        <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>₹{totalPrice}</div>
+                    </div>
+                    <button
+                        onClick={() => navigate('/bookstore-checkout', {
+                            state: {
+                                items: products.filter(p => cart[p.id]).map(p => ({ ...p, quantity: cart[p.id] })),
+                                totalPrice
+                            }
+                        })}
+                        style={{
+                            backgroundColor: 'white',
+                            color: 'var(--color-primary)',
+                            border: 'none',
+                            padding: '12px 24px',
+                            borderRadius: '10px',
+                            fontWeight: 'bold',
+                            fontSize: '1rem',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                        }}
+                    >
+                        Checkout
+                    </button>
+                </motion.div>
+            )}
+        </div>
+    );
+};
+
+export default BookStore;

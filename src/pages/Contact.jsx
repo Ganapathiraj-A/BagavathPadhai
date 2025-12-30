@@ -82,7 +82,7 @@ const Contact = () => {
                         />
 
                         <ContactItem
-                            icon={MapPin}
+                            icon={Home}
                             content="Sri Bagavath Bhavan, Kodambakkadu, Periyakoundapuram, Karippatti, Salem, Tamil Nadu 636106"
                             href="https://maps.app.goo.gl/RxVQ3nqtvuk84UWs8"
                         />

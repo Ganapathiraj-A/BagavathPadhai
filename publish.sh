@@ -15,8 +15,8 @@ gh release delete $TAG --yes || true
 git tag -d $TAG || true
 git push origin :refs/tags/$TAG || true
 
-gh release create $TAG "$APK_NAME" --title "v2.8.46: Program Management UI Refinement" --notes "Features:
-- Reordered Program Management hub: 'Manage Consultation' is now placed directly above 'Program Types' at the user's request."
+gh release create $TAG "$APK_NAME" --title "v2.8.47: Contact Page UI Refinement" --notes "Features:
+- Updated address icons on the Contact Us page: both addresses now use the 'Home' icon for consistency."
 
 echo "---------------------------------------------------"
 echo "Dev Clean Build Published!"

@@ -91,6 +91,14 @@ const AdminProgramManagement = () => {
             permission: 'PROGRAM_MANAGEMENT'
         },
         {
+            title: "Ayya's Schedule",
+            subtitle: 'Manage upcoming spiritual schedules',
+            icon: Calendar,
+            path: '/schedule/manage',
+            permission: 'SCHEDULE_MANAGEMENT',
+            badgeCount: 0 // No specific unread count for schedule management yet
+        },
+        {
             title: 'Online Meetings',
             subtitle: 'Schedule and manage Zoom/Meet links',
             icon: Video,
@@ -117,14 +125,6 @@ const AdminProgramManagement = () => {
             icon: Phone,
             path: '/admin/consultation',
             permission: 'CONSULTATION_MANAGEMENT'
-        },
-        {
-            title: "Ayya's Schedule",
-            subtitle: 'Manage upcoming spiritual schedules',
-            icon: Calendar,
-            path: '/schedule/manage',
-            permission: 'SCHEDULE_MANAGEMENT',
-            badgeCount: 0 // No specific unread count for schedule management yet
         }
     ].filter(section => hasAccess(section.permission));
 

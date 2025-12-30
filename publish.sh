@@ -15,9 +15,8 @@ gh release delete $TAG --yes || true
 git tag -d $TAG || true
 git push origin :refs/tags/$TAG || true
 
-gh release create $TAG "$APK_NAME" --title "v2.8.43: Admin Book Management Layout Fixes" --notes "Features:
-- Fixed horizontal text overflow in book list items.
-- Moved reorder up/down arrows to the right end of the card for better spacing."
+gh release create $TAG "$APK_NAME" --title "v2.8.44: Program Management UI Refinement" --notes "Features:
+- Reordered Program Management hub: 'Ayya's Schedule' is now placed directly below 'Programs' for better contextual grouping."
 
 echo "---------------------------------------------------"
 echo "Dev Clean Build Published!"

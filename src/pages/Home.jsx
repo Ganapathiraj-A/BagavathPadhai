@@ -204,7 +204,7 @@ const Home = () => {
                     <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827', marginBottom: '0.5rem' }}>Sri Bagavath Mission</h1>
                     <p style={{ color: '#6b7280' }}>Welcome to the official app</p>
 
-                    <div style={{ marginTop: '0.5rem' }}>
+                    <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
                         {isActualUser ? (
                             <button
                                 onClick={handleLogout}
@@ -219,8 +219,7 @@ const Home = () => {
                                     textDecoration: 'underline',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '4px',
-                                    margin: '0 auto'
+                                    gap: '4px'
                                 }}
                             >
                                 <LogOut size={14} />
@@ -240,8 +239,7 @@ const Home = () => {
                                     textDecoration: 'underline',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '4px',
-                                    margin: '0 auto'
+                                    gap: '4px'
                                 }}
                             >
                                 <LogIn size={14} />
@@ -249,52 +247,49 @@ const Home = () => {
                             </button>
                         )}
 
-                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '8px' }}>
-                            {isAdmin && (
-                                <button
-                                    onClick={() => navigate('/configuration')}
-                                    style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        color: 'var(--color-primary)',
-                                        fontSize: '0.9rem',
-                                        fontWeight: 500,
-                                        cursor: 'pointer',
-                                        textDecoration: 'underline',
+                        {isAdmin && (
+                            <button
+                                onClick={() => navigate('/configuration')}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'var(--color-primary)',
+                                    fontSize: '0.9rem',
+                                    fontWeight: 500,
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    position: 'relative'
+                                }}
+                            >
+                                <Settings size={14} />
+                                Admin
+                                {totalPending > 0 && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '-6px',
+                                        right: '-10px',
+                                        backgroundColor: '#ef4444',
+                                        color: 'white',
+                                        fontSize: '0.65rem',
+                                        fontWeight: 'bold',
+                                        minWidth: '16px',
+                                        height: '16px',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '4px',
-                                        position: 'relative'
-                                    }}
-                                >
-                                    <Settings size={14} />
-                                    Admin
-                                    {totalPending > 0 && (
-                                        <div style={{
-                                            position: 'absolute',
-                                            top: '-6px',
-                                            right: '-10px',
-                                            backgroundColor: '#ef4444',
-                                            color: 'white',
-                                            fontSize: '0.65rem',
-                                            fontWeight: 'bold',
-                                            minWidth: '16px',
-                                            height: '16px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            borderRadius: '9999px',
-                                            padding: '0 4px',
-                                            border: '1.5px solid white',
-                                            boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                                        }}>
-                                            {totalPending > 99 ? '99+' : totalPending}
-                                        </div>
-                                    )}
-                                </button>
-                            )}
-
-                        </div>
+                                        justifyContent: 'center',
+                                        borderRadius: '9999px',
+                                        padding: '0 4px',
+                                        border: '1.5px solid white',
+                                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                                    }}>
+                                        {totalPending > 99 ? '99+' : totalPending}
+                                    </div>
+                                )}
+                            </button>
+                        )}
                     </div>
                 </div>
 
